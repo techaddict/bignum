@@ -2,7 +2,6 @@ class BigInteger1 extends java.lang.Number{
   var sign = 0
   var numberLength = 0
   var digits = Array[Int]()
-  private var firstNonzeroDigit = -2
 
   //Constructor's
   def this(a: java.lang.String, radix: scala.Int) {
@@ -89,29 +88,6 @@ class BigInteger1 extends java.lang.Number{
   def add(a: BigInteger1) =
     BigInteger1.add(this, a)
 
-  def bitCount(): Int = {
-    var bCount = 0
-    var i = getFirstNonzeroDigit()
-    if (sign == 0)
-      0
-    else if (sign > 0){
-      while (i < numberLength) {
-        bCount += Integer.bitCount(digits(i))
-        i += 1
-      }
-      bCount
-    }
-    else {
-      bCount += Integer.bitCount(-digits(i))
-      i += 1
-      while (i < numberLength) {
-        bCount += Integer.bitCount(~digits(i))
-        i += 1
-      }
-      (numberLength << 5) - bCount
-    }
-  }
-
   def abs(): BigInteger1 = {
     if (sign < 0)
       new BigInteger1(1, numberLength, digits)
@@ -188,28 +164,6 @@ class BigInteger1 extends java.lang.Number{
     }
   }
 
-  def testBit(n: Int): Boolean = {
-    if (n == 0)
-      return ((digits(0) & 1) != 0)
-    if (n < 0)
-      throw new ArithmeticException("Negative Bit Address")
-    val intCount = n >> 5
-    if (intCount >= numberLength)
-      return (sign < 0)
-    var digit = digits(intCount)
-    var n1 = (1 << (n & 31))
-    if (sign < 0) {
-      val firstNonzeroDigit = getFirstNonzeroDigit()
-      if (intCount < firstNonzeroDigit)
-        return false
-      else if (firstNonzeroDigit == intCount)
-        digit = -digit
-      else
-        digit = ~digit
-    }
-    return ((digit & n) != 0)
-  }
-
   def shiftLeft(n: Int): BigInteger1 = {
     if ((n == 0) || (sign == 0))
       this
@@ -226,21 +180,6 @@ class BigInteger1 extends java.lang.Number{
       BigInteger1.shiftRight(this, n)
     else
       BigInteger1.shiftLeft(this, -n)
-  }
-
-  // TODO
-  def getFirstNonzeroDigit(): Int = {
-    if (firstNonzeroDigit == -2) {
-      var i = 0
-      if (this.sign == 0)
-        i = -1
-      else {
-        while(digits(i) == 0)
-          i += 1
-      }
-      firstNonzeroDigit = i
-    }
-    firstNonzeroDigit
   }
 
   def shiftLeftOneBit(): BigInteger1 =
