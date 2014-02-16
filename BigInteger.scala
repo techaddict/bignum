@@ -89,6 +89,29 @@ class BigInteger1 extends java.lang.Number{
   def add(a: BigInteger1) =
     BigInteger1.add(this, a)
 
+  def bitCount(): Int = {
+    var bCount = 0
+    var i = getFirstNonzeroDigit()
+    if (sign == 0)
+      0
+    else if (sign > 0){
+      while (i < numberLength) {
+        bCount += Integer.bitCount(digits(i))
+        i += 1
+      }
+      bCount
+    }
+    else {
+      bCount += Integer.bitCount(-digits(i))
+      i += 1
+      while (i < numberLength) {
+        bCount += Integer.bitCount(~digits(i))
+        i += 1
+      }
+      (numberLength << 5) - bCount
+    }
+  }
+
   def abs(): BigInteger1 = {
     if (sign < 0)
       new BigInteger1(1, numberLength, digits)
