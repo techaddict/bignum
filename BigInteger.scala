@@ -522,36 +522,41 @@ object BigInteger {
   }
 
   def shiftRight(res: Array[Int], resLen: Int, source: Array[Int], intCount: Int, count: Int): Boolean = {
-    var allZero = true
-    var i = 0
-    while (i < intCount) {
-      allZero &= (source(i) == 0)
-      i += 1
+    def compute(pos: Int): Boolean = {
+      if (pos < intCount)
+        if(source(pos) == 0)
+          compute(pos + 1)
+        else
+          false
+      else
+        true
     }
+    var allZero = compute(0)
     if (count == 0) {
       System.arraycopy(source, intCount, res, 0, resLen)
-      i = resLen
     }
     else {
       val leftShiftCount = 32 - count
-      allZero &= (source(i) << leftShiftCount) == 0
-      i = 0
-      while (i < resLen - 1){
-        res(i) = (source(i + intCount) >>> count) | (source(i + intCount + 1) << leftShiftCount)
-        i += 1
+      allZero &= (source(intCount) << leftShiftCount) == 0
+      def compute(pos: Int): Int = {
+        if (pos < resLen -1){
+          res(pos) = (source(pos + intCount) >>> count) | (source(pos + intCount + 1) << leftShiftCount)
+          compute(pos + 1)
+        }
+        else pos
       }
+      val i = compute(0)
       res(i) = (source(i + intCount) >>> count)
-      i += 1
     }
     allZero
   }
 
-  def shiftLeft(source: BigInteger, count1: Int): BigInteger = {
-    val intCount = count1 >> 5
-    val count = count1 & 31
-    var resLength = source.numberLength + intCount + (if (count == 0) 0 else 1)
+  def shiftLeft(source: BigInteger, count: Int): BigInteger = {
+    val intCount = count >> 5
+    val count1 = count & 31
+    var resLength = source.numberLength + intCount + (if (count1 == 0) 0 else 1)
     var resDigits = new Array[Int](resLength)
-    shiftLeft(resDigits, source.digits, intCount, count)
+    shiftLeft(resDigits, source.digits, intCount, count1)
     val result = new BigInteger(source.sign, resLength, resDigits)
     result.cutOffLeadingZeroes
     return result
