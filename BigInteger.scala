@@ -712,16 +712,17 @@ object BigInteger {
   }
 
   def multiplyAndSubtract(a: Array[Int], start: Int, b: Array[Int], bLen: Int, c: Int) = {
-    var carry0 = 0L
-    var carry1 = 0L
-    for (i <- 0 until bLen) {
-      carry0 = unsignedMultAddAdd(b(i), c, carry0.toInt, 0)
-      carry1 += (a(start + i) & 0xFFFFFFFFL) - (carry0 & 0xFFFFFFFFL)
-      a(start + i) = carry1.toInt
-      carry1 >>= 32
-      carry0 >>>= 32
+    def compute(pos: Int, carry0: Long, carry1: Long): (Long, Long) = {
+      if (pos < bLen) {
+        val tcarry0 = unsignedMultAddAdd(b(pos), c, carry0.toInt, 0)
+        val tcarry1 = carry1 + (a(start + pos) & 0xFFFFFFFFL) - (tcarry0 & 0xFFFFFFFFL)
+        a(start + pos) = tcarry1.toInt
+        compute(pos + 1, tcarry0 >>> 32, tcarry1 >> 32)
+      }
+      else (carry0, carry1)
     }
-    carry1 = (a(start + bLen) & 0xFFFFFFFFL) - carry0 + carry1
+    val res = compute(0, 0L, 0L)
+    val carry1 = (a(start + bLen) & 0xFFFFFFFFL) - res._1 + res._2
     a(start + bLen) = carry1.toInt
     (carry1 >> 32).toInt
   }
