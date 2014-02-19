@@ -111,20 +111,24 @@ class BigInteger extends java.lang.Number{
     val cmp =
       if (thisLen != divisorLen) {if (thisLen > divisorLen) 1 else -1}
       else BigInteger.compareArrays(digits, divisor.digits, thisLen)
-    if (cmp == 0)
-      return (if (thisSign == divisorSign) BigInteger.ONE else BigInteger.MINUS_ONE)
-    if (cmp == -1)
-      return BigInteger.ZERO
-    val resLength = thisLen - divisorLen + 1
-    val resDigits = new Array[Int](resLength)
-    val resSign = (if (thisSign == divisorSign) 1 else -1)
-    if (divisorLen == 1)
-      BigInteger.divideArrayByInt(resDigits, digits, thisLen, divisor.digits(0))
-    else
-      BigInteger.divide(resDigits, resLength, digits, thisLen, divisor.digits, divisorLen)
-    val res = new BigInteger(resSign, resLength, resDigits)
-    res.cutOffLeadingZeroes()
-    return res
+    if (cmp == 0){
+      if (thisSign == divisorSign) BigInteger.ONE
+      else BigInteger.MINUS_ONE
+    }
+    else if (cmp == -1)
+      BigInteger.ZERO
+    else {
+      val resLength = thisLen - divisorLen + 1
+      val resDigits = new Array[Int](resLength)
+      val resSign = if (thisSign == divisorSign) 1 else -1
+      if (divisorLen == 1)
+        BigInteger.divideArrayByInt(resDigits, digits, thisLen, divisor.digits(0))
+      else
+        BigInteger.divide(resDigits, resLength, digits, thisLen, divisor.digits, divisorLen)
+      val res = new BigInteger(resSign, resLength, resDigits)
+      res.cutOffLeadingZeroes()
+      res
+    }
   }
 
   def min(a: BigInteger): BigInteger =
@@ -636,24 +640,24 @@ object BigInteger {
         guessDigit = -1
       else {
         val product = (((normA(j) & 0xFFFFFFFFL) << 32) + (normA(j - 1) & 0xFFFFFFFFL))
-        val res = divideLongByInt(product, firstDivisorDigit.toLong)
+        val res = divideLongByInt(product, firstDivisorDigit)
         guessDigit = res.toInt
         var rem = (res >> 32).toInt
         if (guessDigit != 0) {
           guessDigit += 1
           def compute(rOverflowed: Boolean, leftHand: Long, rightHand: Long) {
-            if ((leftHand ^ 0x8000000000000000L) > (rightHand ^ 0x8000000000000000L)) {
-              guessDigit -= 1
-              if (!rOverflowed){
-                val left = (guessDigit & 0xFFFFFFFFL) * (normB(normBLen - 2) & 0xFFFFFFFFL)
-                val right = ((rem.toLong << 32) + (normA(j - 2) & 0xFFFFFFFFL))
-                val longR = (rem & 0xFFFFFFFFL) + (firstDivisorDigit & 0xFFFFFFFFL)
-                if (Integer.numberOfLeadingZeros((longR >>> 32).toInt) < 32)
+            guessDigit -= 1
+            if (!rOverflowed){
+              val left = (guessDigit & 0xFFFFFFFFL) * (normB(normBLen - 2) & 0xFFFFFFFFL)
+              val right = ((rem.toLong << 32) + (normA(j - 2) & 0xFFFFFFFFL))
+              val longR = (rem & 0xFFFFFFFFL) + (firstDivisorDigit & 0xFFFFFFFFL)
+              if (Integer.numberOfLeadingZeros((longR >>> 32).toInt) < 32)
+                if ((leftHand ^ 0x8000000000000000L) > (rightHand ^ 0x8000000000000000L))
                   compute(true, left, right)
-                else{
-                  rem = longR.toInt
+              else{
+                rem = longR.toInt
+                if ((leftHand ^ 0x8000000000000000L) > (rightHand ^ 0x8000000000000000L))
                   compute(false, left, right)
-                }
               }
             }
           }
@@ -687,7 +691,7 @@ object BigInteger {
     }
   }
 
-  def divideLongByInt(a: Long, b: Long): Long = {
+  def divideLongByInt(a: Long, b: Int): Long = {
     val bLong = b & 0xFFFFFFFFL
     if (a >= 0) {
       val quot = (a / bLong)
@@ -697,8 +701,8 @@ object BigInteger {
     else {
       val aPos = a >>> 1
       val bPos = b >>> 1
-      var quot = aPos / bPos
-      var rem = aPos % bPos
+      var quot: Long = aPos / bPos
+      var rem: Long = aPos % bPos
       rem = (rem << 1) + (a & 1)
       if ((b & 1) != 0) {
         if (quot <= rem)
