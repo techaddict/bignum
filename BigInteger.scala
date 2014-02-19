@@ -85,7 +85,7 @@ class BigInteger extends java.lang.Number{
     }*/
   }
 
-  def add(a: BigInteger) =
+  def +(a: BigInteger) =
     BigInteger.add(this, a)
 
   def abs(): BigInteger = {
@@ -95,7 +95,7 @@ class BigInteger extends java.lang.Number{
       this
   }
 
-  def divide(divisor: BigInteger): BigInteger = {
+  def /(divisor: BigInteger): BigInteger = {
     if (divisor.sign == 0)
       throw new ArithmeticException("Divide by Zero")
     if (divisor.isOne)
@@ -174,10 +174,10 @@ class BigInteger extends java.lang.Number{
 
   def signum() = sign
 
-  def subtract(a: BigInteger) =
+  def -(a: BigInteger) =
     BigInteger.subtract(this, a)
 
-  def multiply(a: BigInteger) =
+  def *(a: BigInteger) =
     BigInteger.multiply(this, a)
 
   def negate(): BigInteger = {
@@ -188,7 +188,7 @@ class BigInteger extends java.lang.Number{
     }
   }
 
-  def shiftLeft(n: Int): BigInteger = {
+  def <<(n: Int): BigInteger = {
     if ((n == 0) || (sign == 0))
       this
     else if (n > 0)
@@ -197,7 +197,7 @@ class BigInteger extends java.lang.Number{
       BigInteger.shiftRight(this, -n)
   }
 
-  def shiftRight(n: Int): BigInteger = {
+  def >>(n: Int): BigInteger = {
     if ((n == 0) || (sign == 0))
       this
     else if (n > 0)
@@ -747,17 +747,17 @@ object test extends App{
     val y = new BigInteger(args(1))
     if (args(0) != toDecimalScaledString(x, 0))
       println("error" + args(0) + "!=" + toDecimalScaledString(x, 0))
-    if ((BigInt(args(0)) + BigInt(args(1))).toString != toDecimalScaledString(x.add(y), 0))
+    if ((BigInt(args(0)) + BigInt(args(1))).toString != toDecimalScaledString(x + y, 0))
       println("error in Addition")
-    if ((BigInt(args(0)) - BigInt(args(1))).toString != toDecimalScaledString(subtract(x, y), 0))
+    if ((BigInt(args(0)) - BigInt(args(1))).toString != toDecimalScaledString(x - y, 0))
       println("error in subtraction")
-    if ((BigInt(args(0)) >> args(2).toInt).toString != toDecimalScaledString(x.shiftRight(args(2).toInt), 0))
+    if ((BigInt(args(0)) >> args(2).toInt).toString != toDecimalScaledString(x >> (args(2).toInt), 0))
       println("error in shiftRight")
-    if ((BigInt(args(0)) << args(2).toInt).toString != toDecimalScaledString(x.shiftLeft(args(2).toInt), 0))
+    if ((BigInt(args(0)) << args(2).toInt).toString != toDecimalScaledString(x << (args(2).toInt), 0))
       println("error in shiftLeft")
-    if ((BigInt(args(0)) * BigInt(args(1))).toString != toDecimalScaledString(x.multiply(y), 0))
+    if ((BigInt(args(0)) * BigInt(args(1))).toString != toDecimalScaledString(x * y, 0))
       println("error in multiply")
-    if ((BigInt(args(0)) / BigInt(args(1))).toString != toDecimalScaledString(x.divide(y), 0))
+    if ((BigInt(args(0)) / BigInt(args(1))).toString != toDecimalScaledString(x / y, 0))
       println("error in divide")
   }
 }
