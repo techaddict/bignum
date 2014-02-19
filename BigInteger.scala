@@ -263,13 +263,15 @@ object BigInteger {
     multiplyByInt(a, a, aSize, factor)
 
   def multiplyByInt(res: Array[Int], a: Array[Int], aSize: Int, factor: Int): Int = {
-    var carry = 0L
-    for (i <- 0 until aSize) {
-      carry = unsignedMultAddAdd(a(i), factor, carry.toInt, 0)
-      res(i) = carry.toInt
-      carry >>>= 32
+    def compute(pos: Int, carry: Long): Int = {
+      if (pos < aSize) {
+        val tcarry = unsignedMultAddAdd(a(pos), factor, carry.toInt, 0)
+        res(pos) = tcarry.toInt
+        compute(pos + 1, tcarry >>> 32)
+      }
+      else carry.toInt
     }
-    carry.toInt
+    compute(0, 0L)
   }
 
   def unsignedMultAddAdd(a: Int, b: Int, c: Int, d: Int): Long = {
