@@ -1,3 +1,4 @@
+import scala.annotation.tailrec
 class BigInteger extends java.lang.Number{
   var sign = 0
   var numberLength = 0
@@ -263,6 +264,7 @@ object BigInteger {
     multiplyByInt(a, a, aSize, factor)
 
   def multiplyByInt(res: Array[Int], a: Array[Int], aSize: Int, factor: Int): Int = {
+    @tailrec
     def compute(pos: Int, carry: Long): Int = {
       if (pos < aSize) {
         val tcarry = unsignedMultAddAdd(a(pos), factor, carry.toInt, 0)
@@ -528,6 +530,7 @@ object BigInteger {
   }
 
   def shiftRight(res: Array[Int], resLen: Int, source: Array[Int], intCount: Int, count: Int): Boolean = {
+    @tailrec
     def compute(pos: Int): Boolean = {
       if (pos < intCount)
         if(source(pos) == 0)
@@ -544,6 +547,7 @@ object BigInteger {
     else {
       val leftShiftCount = 32 - count
       allZero &= (source(intCount) << leftShiftCount) == 0
+      @tailrec
       def compute(pos: Int): Int = {
         if (pos < resLen -1){
           res(pos) = (source(pos + intCount) >>> count) | (source(pos + intCount + 1) << leftShiftCount)
@@ -647,6 +651,7 @@ object BigInteger {
         var rem = (res >> 32).toInt
         if (guessDigit != 0) {
           guessDigit += 1
+          @tailrec
           def compute(rOverflowed: Boolean, leftHand: Long, rightHand: Long) {
             guessDigit -= 1
             if (!rOverflowed){
@@ -723,6 +728,7 @@ object BigInteger {
   }
 
   def multiplyAndSubtract(a: Array[Int], start: Int, b: Array[Int], bLen: Int, c: Int) = {
+    @tailrec
     def compute(pos: Int, carry0: Long, carry1: Long): (Long, Long) = {
       if (pos < bLen) {
         val tcarry0 = unsignedMultAddAdd(b(pos), c, carry0.toInt, 0)
