@@ -276,13 +276,22 @@ object BigInteger {
     compute(0, 0L)
   }
 
-  def unsignedMultAddAdd(a: Int, b: Int, c: Int, d: Int): Long = {
+  def unsignedMultAddAdd(a: Int, b: Int, c: Int, d: Int): Long =
     (a & 0xFFFFFFFFL) * (b & 0xFFFFFFFFL) + (c & 0xFFFFFFFFL) + (d & 0xFFFFFFFFL)
-  }
 
   def inplaceAdd(a: Array[Int], aSize: Int, addend: Int): Int = {
     var carry = addend & 0xFFFFFFFFL
     var i = 0
+    /*@tailrec
+    def compute(pos: Int, carry: Long): Int = {
+      if (pos < aSize && carry != 0) {
+        val tcarry = carry + a(pos) & 0xFFFFFFFFL
+        val prev = a(pos)
+        a(pos) = tcarry.toInt
+        compute(pos + 1, carry >>> 32)
+      }
+      else carry.toInt
+    }*/
     while (i < aSize && carry != 0){
       carry += a(i) & 0xFFFFFFFFL
       a(i) = carry.toInt
@@ -290,6 +299,7 @@ object BigInteger {
       i += 1
     }
     carry.toInt
+    //compute(i, carry)
   }
 
   def compareArrays(a: Array[Int], b: Array[Int], size: Int): Int = {
