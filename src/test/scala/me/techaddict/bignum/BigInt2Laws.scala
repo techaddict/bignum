@@ -12,7 +12,7 @@ import org.scalacheck.Properties
 
 import java.math.BigInteger
 
-object BigInt2Laws extends Properties("BigInteger Law") {
+object BigInt2Laws extends Properties("BigInt Law") {
 
   def BigIntGen = for (n <- Gen.numStr if (n != "")) yield n
 
