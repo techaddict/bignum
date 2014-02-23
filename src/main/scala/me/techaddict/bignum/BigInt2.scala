@@ -10,6 +10,8 @@ class BigInt2 extends java.lang.Number{
   //Constructor's
   def this(a: java.lang.String, radix: scala.Int) {
     this()
+    if (a == "")
+      throw new NumberFormatException("Zero length BigInteger")
     val digitFitInInt = Array(-1, -1, 31, 19, 15, 13, 11, 11, 10, 9, 9, 8, 8, 8, 8,
       7, 7, 7, 7, 7, 7, 7, 6, 6, 6, 6, 6, 6, 6,6, 6, 6, 6, 6, 6, 6, 5)
     val bigRadices = Array(-2147483648, 1162261467,1073741824, 1220703125, 362797056,
