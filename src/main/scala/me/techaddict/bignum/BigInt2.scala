@@ -78,7 +78,7 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int]) extends Ordered[B
 
   def +(a: BigInt2) = BigInt2.add(this, a)
 
-  def abs: BigInt2 = if (sign < 0) new BigInt2(1, digits) else this
+  def abs = if (sign < 0) -this else this
 
   def /(divisor: BigInt2): BigInt2 = {
     if (divisor.sign == 0)
@@ -129,13 +129,13 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int]) extends Ordered[B
     else sign * BigInt2.compareArrays(digits, that.digits, digits.size)
   }
 
-  def intValue: Int = (sign * (digits(0)))
+  def intValue: Int = if (digits.length < 2) sign * digits(0) else -1
 
   def longValue: Long = {
     val value =
-      if (digits.size > 1) ((digits(1).toLong) << 32) | (digits(0) & 0xFFFFFFFFL)
+      if (digits.length > 1) ((digits(1).toLong) << 32) | (digits(0) & 0xFFFFFFFFL)
       else (digits(0) & 0xFFFFFFFFL)
-    return sign * value
+    if (digits.length < 3) sign * value else -1L
   }
 
   def signum = sign
@@ -164,7 +164,7 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int]) extends Ordered[B
 
   def shiftLeftOneBit: BigInt2 = if (sign == 0) this else BigInt2.shiftLeft(this, 1)
 
-  def equalsArrays(a: Array[Int]): Boolean =
+  private[this] def equalsArrays(a: Array[Int]): Boolean =
     if (a.size != digits.size)
       false
     else {
@@ -174,11 +174,13 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int]) extends Ordered[B
       (i < 0)
     }
 
-  def isOne = ((digits.size == 1) && (digits(0) == 1))
+  private[bignum] def isOne = ((digits.size == 1) && (digits(0) == 1))
 
   override def equals(that: Any): Boolean = that match {
     case a: BigInt2 =>
       compare(a) == 0
+    case b: BigInt =>
+      toString == b.toString
     case _ => false
   }
 

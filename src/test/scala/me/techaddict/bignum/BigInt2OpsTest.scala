@@ -14,57 +14,51 @@ import java.math.BigInteger
 
 object BigInt2OpsTest extends Properties("BigInt Op") {
 
-  def BigIntGen = for (n <- Gen.numStr if (n != "")) yield n
-  def IntGen = for (n <- Gen.choose(0, 20000)) yield n
+  implicit val arbBigInt2: Arbitrary[BigInt2] =
+    Arbitrary(arbitrary[BigInt].map(n => BigInt2(n.toString)))
 
-  property("Abs a.abs") = forAll(BigIntGen) {
-    case (a: String) =>
-      //Check only for negative BigInteger's
-      val biga = BigInt2("-" + a)
-      val bigintegera = new BigInteger("-" + a)
-      val res0 = biga.abs
-      val res1 = bigintegera.abs
-      res0.toString == res1.toString
+  property("a.abs") = forAll { (a: BigInt2) =>
+    a.abs equals BigInt(a.toString).abs
   }
 
-  property("Minimum a.min(b)") = forAll(BigIntGen, BigIntGen) {
-    case (a: String, b: String) =>
-      val biga = BigInt2(a)
-      val bigb = BigInt2(b)
-      val bigintegera = new BigInteger(a)
-      val bigintegerb = new BigInteger(b)
-      val res0 = biga.min(bigb)
-      val res1 = bigintegera.min(bigintegerb)
-      res0.toString == res1.toString
+  property("a min b") = forAll { (a: BigInt2, b: BigInt2) =>
+    (a min b) equals (BigInt(a.toString) min BigInt(b.toString))
   }
 
-  property("Minimum a.max(b)") = forAll(BigIntGen, BigIntGen) {
-    case (a: String, b: String) =>
-      val biga = BigInt2(a)
-      val bigb = BigInt2(b)
-      val bigintegera = new BigInteger(a)
-      val bigintegerb = new BigInteger(b)
-      val res0 = biga.max(bigb)
-      val res1 = bigintegera.max(bigintegerb)
-      res0.toString == res1.toString
+  property("a max b") = forAll { (a: BigInt2, b: BigInt2) =>
+    (a max b) equals (BigInt(a.toString) max BigInt(b.toString))
   }
 
-  property("Left Shift a << b") = forAll(BigIntGen, IntGen) {
-    case (a: String, b: Int) =>
-      val biga = BigInt2(a)
-      val bigintegera = new BigInteger(a)
-      val res0 = biga << b
-      val res1 = bigintegera.shiftLeft(b)
-      res0.toString == res1.toString
+  property("a compare b") = forAll { (a: BigInt2, b: BigInt2) =>
+    (a compare b) equals (BigInt(a.toString) compare BigInt(b.toString))
   }
 
-  property("Right Shift a >> b") = forAll(BigIntGen, IntGen) {
-    case (a: String, b: Int) =>
-      val biga = BigInt2(a)
-      val bigintegera = new BigInteger(a)
-      val res0 = biga >> b
-      val res1 = bigintegera.shiftRight(b)
-      res0.toString == res1.toString
+  property("a.intValue") = forAll { (a: Int) =>
+    BigInt2.valueOf(a.toLong).intValue == a
+  }
+
+  /*property("a.longValue") = forAll { (a: Long) =>
+    BigInt2.valueOf(a).longValue == a
+  }*/
+
+  property("a.signum") = forAll { (a: BigInt2) =>
+    a.signum equals BigInt(a.toString).signum
+  }
+
+  property("-a") = forAll { (a: BigInt2) =>
+    -a equals -BigInt(a.toString)
+  }
+
+  /*property("a << b") = forAll { (a: BigInt2, b: Int) =>
+    (a << b) equals (BigInt(a.toString) << b)
+  }*/
+
+  /*property("a >> b") = forAll { (a: BigInt2, b: Int) =>
+    (a >> b) equals (BigInt(a.toString) >> b)
+  }*/
+
+  property("a.shiftLeftOneBit") = forAll { (a: BigInt2) =>
+      (a.shiftLeftOneBit) equals (BigInt(a.toString) << 1)
   }
 
 }
