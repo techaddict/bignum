@@ -15,7 +15,7 @@ import java.math.BigInteger
 object BigInt2Laws extends Properties("BigInt Law") {
 
   implicit val arbBigInt2: Arbitrary[BigInt2] =
-    Arbitrary(arbitrary[BigInt].map(n => new BigInt2(n.toString)))
+    Arbitrary(arbitrary[BigInt].map(n => BigInt2(n.toString)))
 
   property("a + b == b + a") = forAll { (a: BigInt2, b: BigInt2) =>
     (a + b) equals (b + a)

@@ -20,17 +20,17 @@ object BigInt2OpsTest extends Properties("BigInt Op") {
   property("Abs a.abs") = forAll(BigIntGen) {
     case (a: String) =>
       //Check only for negative BigInteger's
-      val biga = new BigInt2("-" + a)
+      val biga = BigInt2("-" + a)
       val bigintegera = new BigInteger("-" + a)
-      val res0 = biga.abs()
-      val res1 = bigintegera.abs()
+      val res0 = biga.abs
+      val res1 = bigintegera.abs
       res0.toString == res1.toString
   }
 
   property("Minimum a.min(b)") = forAll(BigIntGen, BigIntGen) {
     case (a: String, b: String) =>
-      val biga = new BigInt2(a)
-      val bigb = new BigInt2(b)
+      val biga = BigInt2(a)
+      val bigb = BigInt2(b)
       val bigintegera = new BigInteger(a)
       val bigintegerb = new BigInteger(b)
       val res0 = biga.min(bigb)
@@ -40,8 +40,8 @@ object BigInt2OpsTest extends Properties("BigInt Op") {
 
   property("Minimum a.max(b)") = forAll(BigIntGen, BigIntGen) {
     case (a: String, b: String) =>
-      val biga = new BigInt2(a)
-      val bigb = new BigInt2(b)
+      val biga = BigInt2(a)
+      val bigb = BigInt2(b)
       val bigintegera = new BigInteger(a)
       val bigintegerb = new BigInteger(b)
       val res0 = biga.max(bigb)
@@ -51,7 +51,7 @@ object BigInt2OpsTest extends Properties("BigInt Op") {
 
   property("Left Shift a << b") = forAll(BigIntGen, IntGen) {
     case (a: String, b: Int) =>
-      val biga = new BigInt2(a)
+      val biga = BigInt2(a)
       val bigintegera = new BigInteger(a)
       val res0 = biga << b
       val res1 = bigintegera.shiftLeft(b)
@@ -60,7 +60,7 @@ object BigInt2OpsTest extends Properties("BigInt Op") {
 
   property("Right Shift a >> b") = forAll(BigIntGen, IntGen) {
     case (a: String, b: Int) =>
-      val biga = new BigInt2(a)
+      val biga = BigInt2(a)
       val bigintegera = new BigInteger(a)
       val res0 = biga >> b
       val res1 = bigintegera.shiftRight(b)
