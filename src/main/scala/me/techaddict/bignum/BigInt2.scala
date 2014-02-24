@@ -105,10 +105,13 @@ class BigInt2 extends java.lang.Number{
       else pos
     }
     val pos = counter(digits.length - 1)
-    // Check if pos != digits last elem and for Zero
-    if (pos != digits.length - 1 && digits.length != 1) {
+    // Check if pos != digits last elem
+    if (pos != digits.length - 1) {
       digits = digits.dropRight(digits.length - pos - 1)
       numberLength = digits.length
+      // If all are zero only then digits = Array(0) and sign
+      if (digits.length == 0)
+        digits = Array(0)
     }
   }
 
@@ -470,8 +473,8 @@ object BigInt2 {
   }
 
   def multiply(a: BigInt2, b: BigInt2): BigInt2 = {
-    val aLen = a.numberLength
-    val bLen = b.numberLength
+    val aLen = a.digits.length
+    val bLen = b.digits.length
     val resLength = aLen + bLen
     val resSign =
       if (0 == a.sign || 0 == b.sign) 0
