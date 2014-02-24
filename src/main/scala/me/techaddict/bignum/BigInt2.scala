@@ -13,19 +13,19 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int]) extends Ordered[B
       throw new NumberFormatException("Zero length BigInteger")
     val a = removeLeadingZeroes(a1)
     if (a == "") {
-      this.sign = 0
-      this.digits = Array(0)
+      sign = 0
+      digits = Array(0)
     }
     else {
       // Doesn't Handle +123
-      val sign = if (a.size > 0 && a(0) == '-') -1 else 1
-      val startChar = if (sign == -1) 1 else 0
-      val stringLength = a.size + (if (sign == -1) -1 else 0)
+      val sign1 = if (a.size > 0 && a(0) == '-') -1 else 1
+      val startChar = if (sign1 == -1) 1 else 0
+      val stringLength = a.size + (if (sign1 == -1) -1 else 0)
 
       val charsPerInt = BigInt2.digitFitInInt(radix)
       val topChars = stringLength % charsPerInt
       val bigRadixDigitsLength = (stringLength / charsPerInt) + (if (topChars != 0) 1 else 0)
-      var digits = new Array[Int](bigRadixDigitsLength)
+      var digits1 = new Array[Int](bigRadixDigitsLength)
       val bigRadix = BigInt2.bigRadices(radix - 2)
 
       def init(ind: Int, substrStart: Int, substrEnd: Int): Int = {
@@ -34,8 +34,8 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int]) extends Ordered[B
           if (bigRadixDigit < 0)
             throw new NumberFormatException("Illegal Digit")
           // digits * bigRadix + bigRadixDigit
-          val newDigit = BigInt2.multiplyByInt(digits, ind, bigRadix)
-          digits(ind) = newDigit + BigInt2.inplaceAdd(digits, ind, bigRadixDigit)
+          val newDigit = BigInt2.multiplyByInt(digits1, ind, bigRadix)
+          digits1(ind) = newDigit + BigInt2.inplaceAdd(digits1, ind, bigRadixDigit)
           init(ind + 1, substrEnd, substrEnd + charsPerInt)
         }
         else
@@ -43,13 +43,9 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int]) extends Ordered[B
       }
       val substrEnd = startChar + (if (topChars == 0) charsPerInt else topChars)
       init(0, startChar, substrEnd)
-      this.sign = sign
-      this.digits = digits
-      this.cutOffLeadingZeroes
-      /*if (digits.size == 0) {
-        this.sign = 0
-        this.digits = Array(0)
-      }*/
+      sign = sign1
+      digits = digits1
+      cutOffLeadingZeroes
     }
   }
 
@@ -70,7 +66,7 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int]) extends Ordered[B
     }
   }
 
-  private[bignum] def removeLeadingZeroes(s: String): String = {
+  private[this] def removeLeadingZeroes(s: String): String = {
     def counter(pos: Int): Int = {
       if (pos < s.size && s(pos) == '0')
         counter(pos + 1)
@@ -128,11 +124,11 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int]) extends Ordered[B
   }
 
   def min(a: BigInt2): BigInt2 =
-    if (this.compare(a) == -1) this
+    if (this.compare(a) < 0) this
     else a
 
   def max(a: BigInt2): BigInt2 =
-    if (this.compare(a) == 1) this
+    if (this.compare(a) > 0) this
     else a
 
   def compare(that: BigInt2): Int = {
