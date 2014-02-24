@@ -30,11 +30,11 @@ object BigInt2Laws extends Properties("BigInt Law") {
   }
 
   property("a + 0 == a") = forAll { (a: BigInt2) =>
-    (a + BigInt2.ZERO) equals a
+    (a + BigInt2.zero) equals a
   }
 
   property("a + (-a) = 0") = forAll { (a: BigInt2) =>
-    (a + (-a)) equals BigInt2.ZERO
+    (a + (-a)) equals BigInt2.zero
   }
 
   property("a - b == a + (-b)") = forAll { (a: BigInt2, b: BigInt2) =>
@@ -42,11 +42,11 @@ object BigInt2Laws extends Properties("BigInt Law") {
   }
 
   property("a * 0 == 0") = forAll { (a: BigInt2) =>
-    (a * BigInt2.ZERO) equals BigInt2.ZERO
+    (a * BigInt2.zero) equals BigInt2.zero
   }
 
   property("a * 1 == a") = forAll { (a: BigInt2) =>
-    (a * BigInt2.ONE) equals a
+    (a * BigInt2.one) equals a
   }
 
   property("a * b == b * a)") = forAll { (a: BigInt2, b: BigInt2) =>
@@ -59,7 +59,7 @@ object BigInt2Laws extends Properties("BigInt Law") {
 
   // Below Test's should take care of divide by 0 :P
   /*property("a / a == 1)") = forAll { (a: BigInt2) =>
-    (a / a).toString == BigInt2.ONE.toString
+    (a / a).toString == BigInt2.one.toString
   }
 
   property("(a * b) / b = a") = forAll { (a: BigInt2, b: BigInt2) =>

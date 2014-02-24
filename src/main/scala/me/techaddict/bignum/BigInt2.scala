@@ -2,11 +2,13 @@ package me.techaddict.bignum
 
 import scala.annotation.tailrec
 
-class BigInt2 private(var sign: Int = 0, var digits: Array[Int] = Array[Int]())
-  extends Ordered[BigInt2]{
+class BigInt2 private[bignum](sign0: Int, digits0: Array[Int]) extends Ordered[BigInt2]{
+  private[bignum] var sign: Int = sign0
+  private[bignum] var digits: Array[Int] = digits0
+
   //Constructor's
-  def this(a1: java.lang.String, radix: scala.Int) {
-    this()
+  private[bignum] def this(a1: String, radix: Int) {
+    this(0, Array(0))
     if (a1.length == 0)
       throw new NumberFormatException("Zero length BigInteger")
     val a = removeLeadingZeroes(a1)
@@ -15,25 +17,16 @@ class BigInt2 private(var sign: Int = 0, var digits: Array[Int] = Array[Int]())
       this.digits = Array(0)
     }
     else {
-      val digitFitInInt = Array(0, 0, 30, 19, 15, 13, 11, 11, 10, 9, 9, 8, 8, 8, 8, 7, 7,
-        7, 7, 7, 7, 7, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 5)
-      val bigRadices = Array(-2147483648, 1162261467,1073741824, 1220703125, 362797056,
-        1977326743, 1073741824, 387420489, 1000000000, 214358881, 429981696, 815730721,
-        1475789056, 170859375, 268435456, 410338673, 612220032, 893871739, 1280000000,
-        1801088541, 113379904, 148035889, 191102976, 244140625, 308915776, 387420489,
-        481890304, 594823321, 729000000, 887503681, 1073741824, 1291467969, 1544804416,
-        1838265625, 60466176)
-
       // Doesn't Handle +123
       val sign = if (a.size > 0 && a(0) == '-') -1 else 1
       val startChar = if (sign == -1) 1 else 0
       val stringLength = a.size + (if (sign == -1) -1 else 0)
 
-      val charsPerInt = digitFitInInt(radix)
+      val charsPerInt = BigInt2.digitFitInInt(radix)
       val topChars = stringLength % charsPerInt
       val bigRadixDigitsLength = (stringLength / charsPerInt) + (if (topChars != 0) 1 else 0)
       var digits = new Array[Int](bigRadixDigitsLength)
-      val bigRadix = bigRadices(radix - 2)
+      val bigRadix = BigInt2.bigRadices(radix - 2)
 
       def init(ind: Int, substrStart: Int, substrEnd: Int): Int = {
         if (substrStart < a.size) {
@@ -115,11 +108,11 @@ class BigInt2 private(var sign: Int = 0, var digits: Array[Int] = Array[Int]())
       if (thisLen != divisorLen) {if (thisLen > divisorLen) 1 else -1}
       else BigInt2.compareArrays(digits, divisor.digits, thisLen)
     if (cmp == 0){
-      if (thisSign == divisorSign) BigInt2.ONE
-      else BigInt2.MINUS_ONE
+      if (thisSign == divisorSign) BigInt2.one
+      else BigInt2.minusOne
     }
     else if (cmp == -1)
-      BigInt2.ZERO
+      BigInt2.zero
     else {
       val resLength = thisLen - divisorLen + 1
       val resDigits = new Array[Int](resLength)
@@ -224,13 +217,22 @@ class BigInt2 private(var sign: Int = 0, var digits: Array[Int] = Array[Int]())
 }
 
 object BigInt2 {
-  val MINUS_ONE = BigInt2("-1")
-  val ZERO = BigInt2("0")
-  val ONE = BigInt2("1")
-  val TEN = BigInt2("10")
-  val SMALL_VALUES = Array[BigInt2](ZERO, ONE, BigInt2(1, 2), BigInt2(1, 3),
+  lazy val minusOne = BigInt2("-1")
+  lazy val zero = BigInt2("0")
+  lazy val one = BigInt2("1")
+  lazy val ten = BigInt2("10")
+  lazy val SMALL_VALUES = Array[BigInt2](zero, one, BigInt2(1, 2), BigInt2(1, 3),
     BigInt2(1, 4), BigInt2(1, 5), BigInt2(1, 6), BigInt2(1, 7),
-    BigInt2(1, 8), BigInt2(1, 9), TEN )
+    BigInt2(1, 8), BigInt2(1, 9), ten )
+
+  lazy val digitFitInInt = Array(-1, -1, 30, 19, 15, 13, 11, 11, 10, 9, 9, 8, 8, 8, 8, 7, 7,
+    7, 7, 7, 7, 7, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 5)
+  lazy val bigRadices = Array(-2147483648, 1162261467,1073741824, 1220703125, 362797056,
+    1977326743, 1073741824, 387420489, 1000000000, 214358881, 429981696, 815730721,
+    1475789056, 170859375, 268435456, 410338673, 612220032, 893871739, 1280000000,
+    1801088541, 113379904, 148035889, 191102976, 244140625, 308915776, 387420489,
+    481890304, 594823321, 729000000, 887503681, 1073741824, 1291467969, 1544804416,
+    1838265625, 60466176)
 
   def apply(a: String) =
     new BigInt2(a, 10)
@@ -244,11 +246,11 @@ object BigInt2 {
   def apply(sign: Int, value: Array[Int]) =
     new BigInt2(sign, value)
 
-  def random(num: scala.Int, rnd: java.util.Random) = {
+  def random(num: Int, rnd: java.util.Random) = {
     if (num < 0)
       throw new IllegalArgumentException("Number of Bits must be non-negative")
     else if (num == 0) {
-      ZERO
+      zero
     }
     else {
       val digits = new Array[Int]((num + 31) >> 5)
@@ -266,7 +268,7 @@ object BigInt2 {
       if (a != -1)
         BigInt2(-1, -a.toInt)
       else
-        MINUS_ONE
+        minusOne
     }
     else if (a <= 10)
       SMALL_VALUES(a.toInt)
@@ -378,7 +380,7 @@ object BigInt2 {
         }
         else compareArrays(a.digits, b.digits, aLen))
       if (cmp == 0)
-        return ZERO
+        return zero
       else if (cmp == 1) {
         resSign = aSign
         resDigits = subtract(a.digits, b.digits)
@@ -547,7 +549,7 @@ object BigInt2 {
     val intCount = count1 >> 5
     val count = count1 & 31
     if (intCount >= source.digits.size)
-      return (if (source.sign < 0) MINUS_ONE else ZERO)
+      return (if (source.sign < 0) minusOne else zero)
     var resLength = source.digits.size - intCount
     var resDigits = new Array[Int](resLength + 1)
     shiftRight(resDigits, resLength, source.digits, intCount, count)
