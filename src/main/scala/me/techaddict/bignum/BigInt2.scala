@@ -53,7 +53,7 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int]) extends Ordered[B
     }
   }
 
-  private def cutOffLeadingZeroes {
+  private[bignum] def cutOffLeadingZeroes {
     // should be replaced by dropWhile
     def counter(pos: Int): Int = {
       if (pos >= 0 && digits(pos) == 0)
@@ -70,7 +70,7 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int]) extends Ordered[B
     }
   }
 
-  private def removeLeadingZeroes(s: String): String = {
+  private[bignum] def removeLeadingZeroes(s: String): String = {
     def counter(pos: Int): Int = {
       if (pos < s.size && s(pos) == '0')
         counter(pos + 1)
@@ -276,7 +276,7 @@ object BigInt2 {
       BigInt2(1, a.toInt)
   }
 
-  def toDecimalScaledString(bi: BigInt2, scale: Int): String = {
+  private[bignum] def toDecimalScaledString(bi: BigInt2, scale: Int): String = {
     var digits = bi.digits
     var resLengthInChars = digits.size * 10 + 1 + 7
     var result = new Array[Char](resLengthInChars + 1)
@@ -290,10 +290,10 @@ object BigInt2 {
     else ret
   }
 
-  def multiplyByInt(a: Array[Int], aSize: Int, factor: Int): Int =
+  private[bignum] def multiplyByInt(a: Array[Int], aSize: Int, factor: Int): Int =
     multiplyByInt(a, a, aSize, factor)
 
-  def multiplyByInt(res: Array[Int], a: Array[Int], aSize: Int, factor: Int): Int = {
+  private[this] def multiplyByInt(res: Array[Int], a: Array[Int], aSize: Int, factor: Int): Int = {
     @tailrec
     def compute(pos: Int, carry: Long): Int = {
       if (pos < aSize) {
@@ -306,10 +306,10 @@ object BigInt2 {
     compute(0, 0L)
   }
 
-  def unsignedMultAddAdd(a: Int, b: Int, c: Int, d: Int): Long =
+  private[bignum] def unsignedMultAddAdd(a: Int, b: Int, c: Int, d: Int): Long =
     (a & 0xFFFFFFFFL) * (b & 0xFFFFFFFFL) + (c & 0xFFFFFFFFL) + (d & 0xFFFFFFFFL)
 
-  def inplaceAdd(a: Array[Int], aSize: Int, addend: Int): Int = {
+  private[bignum] def inplaceAdd(a: Array[Int], aSize: Int, addend: Int): Int = {
     var carry = addend & 0xFFFFFFFFL
     var i = 0
     /*@tailrec
@@ -332,7 +332,7 @@ object BigInt2 {
     //compute(i, carry)
   }
 
-  def compareArrays(a: Array[Int], b: Array[Int], size: Int): Int = {
+  private[bignum] def compareArrays(a: Array[Int], b: Array[Int], size: Int): Int = {
     var i = size - 1
     while((i >= 0) && (a(i) == b(i)))
       i -= 1
@@ -341,7 +341,7 @@ object BigInt2 {
     else 1
   }
 
-  def add(a: BigInt2, b: BigInt2): BigInt2 = {
+  private[bignum] def add(a: BigInt2, b: BigInt2): BigInt2 = {
     val aSign = a.sign
     val bSign = b.sign
     var resSign = 0
@@ -395,7 +395,7 @@ object BigInt2 {
     res
   }
 
-  def add(res: Array[Int], a: Array[Int], b: Array[Int]) {
+  private[this] def add(res: Array[Int], a: Array[Int], b: Array[Int]) {
     var carry = (a(0) & 0xFFFFFFFFL) + (b(0) & 0xFFFFFFFFL)
     res(0) = carry.toInt
     carry >>= 32
@@ -416,7 +416,7 @@ object BigInt2 {
       res(i) = carry.toInt
   }
 
-  def add(a: Array[Int], b: Array[Int]): Array[Int] = {
+  private[this] def add(a: Array[Int], b: Array[Int]): Array[Int] = {
     var res = new Array[Int](a.size + 1)
     if (a.size >= b.size)
       add(res, a, b)
@@ -425,10 +425,10 @@ object BigInt2 {
     return res
   }
 
-  def subtract(a: BigInt2, b: BigInt2): BigInt2 =
+  private[bignum] def subtract(a: BigInt2, b: BigInt2): BigInt2 =
     add(a, -b)
 
-  def subtract(res: Array[Int], a: Array[Int], b: Array[Int]) {
+  private[this] def subtract(res: Array[Int], a: Array[Int], b: Array[Int]) {
     var i = 0
     var borrow = 0L
     while (i < b.size) {
@@ -445,13 +445,13 @@ object BigInt2 {
     }
   }
 
-  def subtract(a: Array[Int], b: Array[Int]): Array[Int] = {
+  private[this] def subtract(a: Array[Int], b: Array[Int]): Array[Int] = {
     var res = new Array[Int](a.size)
     subtract(res, a, b)
     return res
   }
 
-  def multiply(a: BigInt2, b: BigInt2): BigInt2 = {
+  private[bignum] def multiply(a: BigInt2, b: BigInt2): BigInt2 = {
     val resLength = a.digits.size + b.digits.size
     val resSign =
       if (0 == a.sign || 0 == b.sign) 0
@@ -476,7 +476,7 @@ object BigInt2 {
     }
   }
 
-  def multArraysPAP(a: Array[Int], b: Array[Int], res: Array[Int]) {
+  private[this] def multArraysPAP(a: Array[Int], b: Array[Int], res: Array[Int]) {
     val aLen = a.size
     val bLen = b.size
     if (!(aLen == 0 || bLen == 0)) {
@@ -489,7 +489,7 @@ object BigInt2 {
     }
   }
 
-  def multPAP(a: Array[Int], b: Array[Int], t: Array[Int]) {
+  private[this] def multPAP(a: Array[Int], b: Array[Int], t: Array[Int]) {
     if (a == b && a.size == b.size)
       square(a, t)
     else {
@@ -506,7 +506,7 @@ object BigInt2 {
     }
   }
 
-  def square(a: Array[Int], res: Array[Int]): Array[Int] = {
+  private[this] def square(a: Array[Int], res: Array[Int]): Array[Int] = {
     val aLen = a.size
     var carry = 0L
     for (i <- 0 until aLen) {
@@ -534,7 +534,7 @@ object BigInt2 {
     res
   }
 
-  def shiftLeftOneBit(result: Array[Int], source: Array[Int], srcLen: Int) {
+  private[this] def shiftLeftOneBit(result: Array[Int], source: Array[Int], srcLen: Int) {
     var carry = 0
     for (i <- 0 until srcLen) {
       val value = source(i)
@@ -545,7 +545,7 @@ object BigInt2 {
       result(srcLen) = carry
   }
 
-  def shiftRight(source: BigInt2, count1: Int): BigInt2 = {
+  private[bignum] def shiftRight(source: BigInt2, count1: Int): BigInt2 = {
     val intCount = count1 >> 5
     val count = count1 & 31
     if (intCount >= source.digits.size)
@@ -573,7 +573,7 @@ object BigInt2 {
     return result
   }
 
-  def shiftRight(res: Array[Int], resLen: Int, source: Array[Int],
+  private[this] def shiftRight(res: Array[Int], resLen: Int, source: Array[Int],
     intCount: Int, count: Int): Boolean = {
     @tailrec def compute(pos: Int): Boolean = {
       if (pos < intCount)
@@ -606,7 +606,7 @@ object BigInt2 {
     allZero
   }
 
-  def shiftLeft(source: BigInt2, count: Int): BigInt2 = {
+  private[bignum] def shiftLeft(source: BigInt2, count: Int): BigInt2 = {
     val intCount = count >> 5
     val count1 = count & 31
     var resLength = source.digits.size + intCount + (if (count1 == 0) 0 else 1)
@@ -617,7 +617,7 @@ object BigInt2 {
     return result
   }
 
-  def shiftLeft(res: Array[Int], source: Array[Int], intCount: Int, count: Int) {
+  private[bignum] def shiftLeft(res: Array[Int], source: Array[Int], intCount: Int, count: Int) {
     if (count == 0)
       System.arraycopy(source, 0, res, intCount, res.size - intCount)
     else {
@@ -634,7 +634,7 @@ object BigInt2 {
       res(i) = 0
   }
 
-  def divideArrayByInt(dest: Array[Int], src: Array[Int], divisor: Int): Int = {
+  private[bignum] def divideArrayByInt(dest: Array[Int], src: Array[Int], divisor: Int): Int = {
     var rem = 0L
     var bLong = divisor & 0xFFFFFFFFL
     for (i <- src.size - 1 to 0 by -1) {
@@ -669,7 +669,7 @@ object BigInt2 {
     rem.toInt
   }
 
-  def divide(quot: Array[Int], quotLen: Int, a: Array[Int], b: Array[Int]): Array[Int] = {
+  private[bignum] def divide(quot: Array[Int], quotLen: Int, a: Array[Int], b: Array[Int]): Array[Int] = {
     val aLen = a.size
     val bLen = b.size
     val normA = new Array[Int](aLen + 1)
@@ -744,7 +744,7 @@ object BigInt2 {
     }
   }
 
-  def divideLongByInt(a: Long, b: Int): Long = {
+  private[this] def divideLongByInt(a: Long, b: Int): Long = {
     val bLong = b & 0xFFFFFFFFL
     if (a >= 0) {
       val quot = (a / bLong)
@@ -773,7 +773,7 @@ object BigInt2 {
     }
   }
 
-  def multiplyAndSubtract(a: Array[Int], start: Int, b: Array[Int], bLen: Int, c: Int) = {
+  private[this] def multiplyAndSubtract(a: Array[Int], start: Int, b: Array[Int], bLen: Int, c: Int) = {
     @tailrec
     def compute(pos: Int, carry0: Long, carry1: Long): (Long, Long) = {
       if (pos < bLen) {
