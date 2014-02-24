@@ -49,13 +49,13 @@ object BigInt2OpsTest extends Properties("BigInt Op") {
     -a equals -BigInt(a.toString)
   }
 
-  /*property("a << b") = forAll { (a: BigInt2, b: Int) =>
-    (a << b) equals (BigInt(a.toString) << b)
-  }*/
+  property("a << b") = forAll { (a: BigInt2, b: Short) =>
+    (a << b.toInt) equals (BigInt(a.toString) << b.toInt)
+  }
 
-  /*property("a >> b") = forAll { (a: BigInt2, b: Int) =>
-    (a >> b) equals (BigInt(a.toString) >> b)
-  }*/
+  property("a >> b") = forAll { (a: BigInt2, b: Short) =>
+    (a >> b.toInt) equals (BigInt(a.toString) >> b.toInt)
+  }
 
   property("a.shiftLeftOneBit") = forAll { (a: BigInt2) =>
       (a.shiftLeftOneBit) equals (BigInt(a.toString) << 1)
