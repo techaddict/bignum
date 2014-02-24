@@ -18,39 +18,39 @@ object BigInt2Laws extends Properties("BigInt Law") {
     Arbitrary(arbitrary[BigInt].map(n => new BigInt2(n.toString)))
 
   property("a + b == b + a") = forAll { (a: BigInt2, b: BigInt2) =>
-    (a + b).toString == (b + a).toString
+    (a + b) equals (b + a)
   }
 
   property("a + (b + c) = (a + b) + c") = forAll { (a: BigInt2, b: BigInt2, c: BigInt2) =>
-    (a + (b + c)).toString == ((a + b) + c).toString
+    (a + (b + c)) equals ((a + b) + c)
   }
 
   property("a * (b + c) = (a * b) + (a * c)") = forAll { (a: BigInt2, b: BigInt2, c: BigInt2) =>
-    (a * (b + c)).toString == ((a * b) + (a * c)).toString
+    (a * (b + c)) equals ((a * b) + (a * c))
   }
 
   property("a + 0 == a") = forAll { (a: BigInt2) =>
-    (a + BigInt2.ZERO).toString == a.toString
+    (a + BigInt2.ZERO) equals a
   }
 
   property("a + (-a) = 0") = forAll { (a: BigInt2) =>
-    (a + (-a)).toString == BigInt2.ZERO.toString
+    (a + (-a)) equals BigInt2.ZERO
   }
 
   property("a - b == a + (-b)") = forAll { (a: BigInt2, b: BigInt2) =>
-    (a - b).toString == (a + (-b)).toString
+    (a - b) equals (a + (-b))
   }
 
   property("a * 0 == 0") = forAll { (a: BigInt2) =>
-    (a * BigInt2.ZERO).toString == BigInt2.ZERO.toString
+    (a * BigInt2.ZERO) equals BigInt2.ZERO
   }
 
   property("a * 1 == a") = forAll { (a: BigInt2) =>
-    (a * BigInt2.ONE).toString == a.toString
+    (a * BigInt2.ONE) equals a
   }
 
   property("a * b == b * a)") = forAll { (a: BigInt2, b: BigInt2) =>
-    (a * b).toString == (b * a).toString
+    (a * b) equals (b * a)
   }
 
   // Below Test's should take care of divide by 0 :P

@@ -248,13 +248,23 @@ class BigInt2 extends java.lang.Number{
     else BigInt2.shiftLeft(this, 1)
 
   def equalsArrays(a: Array[Int]): Boolean = {
-    var i = numberLength - 1
-    while ((i >= 0) && (digits(i) == a(i)))
-      i -= 1
-    (i < 0)
+    if (a.length != digits.length)
+      false
+    else {
+      var i = digits.length - 1
+      while ((i >= 0) && (digits(i) == a(i)))
+        i -= 1
+      (i < 0)
+    }
   }
 
   def isOne() = ((numberLength == 1) && (digits(0) == 1))
+
+  override def equals(that: Any): Boolean = that match {
+    case a: BigInt2 =>
+      equalsArrays(a.digits) && sign == a.sign
+    case _ => false
+  }
 
   override def toString = BigInt2.toDecimalScaledString(this, 0)
 
