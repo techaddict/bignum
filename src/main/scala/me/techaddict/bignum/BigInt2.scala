@@ -4,7 +4,6 @@ import scala.annotation.tailrec
 
 class BigInt2 extends java.lang.Number{
   var sign = 0
-  var numberLength = 0
   var digits = Array[Int]()
 
   //Constructor's
@@ -52,10 +51,9 @@ class BigInt2 extends java.lang.Number{
           ind
       }
       val substrEnd = startChar + (if (topChars == 0) charsPerInt else topChars)
-      val numberLength = init(0, startChar, substrEnd)
+      init(0, startChar, substrEnd)
       this.sign = sign
       this.digits = digits
-      this.numberLength = numberLength
       this.cutOffLeadingZeroes()
       /*if (digits.length == 0) {
         this.sign = 0
@@ -72,30 +70,26 @@ class BigInt2 extends java.lang.Number{
       throw new IllegalArgumentException("Number of Bits must be non-negative")
     else if (num == 0) {
       this.sign = 0
-      this.numberLength = 1
       this.digits = Array[Int](0)
     }
     else {
       this.sign = 1
-      val numberLength = (num + 31) >> 5
-      this.numberLength = (num + 31) >> 5
-      this.digits = new Array[Int](numberLength)
-      for (i <- 0 until numberLength)
+      this.digits = new Array[Int]((num + 31) >> 5)
+      for (i <- 0 until digits.length)
         digits(i) = rnd.nextInt()
-      digits(numberLength - 1) >>>= (-num) & 31
+      digits(digits.length - 1) >>>= (-num) & 31
       cutOffLeadingZeroes()
     }
   }
 
-  def this(sign: Int, numberLength: Int, digits: Array[Int]) {
+  def this(sign: Int, digits: Array[Int]) {
     this()
     this.sign = sign
-    this.numberLength = numberLength
     this.digits = digits
   }
 
   def this(sign: Int, value: Int) =
-    this(sign, 1, Array(value))
+    this(sign, Array(value))
 
   private def cutOffLeadingZeroes() {
     // should be replaced by dropWhile
@@ -108,7 +102,6 @@ class BigInt2 extends java.lang.Number{
     // Check if pos != digits last elem
     if (pos != digits.length - 1) {
       digits = digits.dropRight(digits.length - pos - 1)
-      numberLength = digits.length
       // If all are zero only then digits = Array(0) and sign
       if (digits.length == 0)
         digits = Array(0)
@@ -130,7 +123,7 @@ class BigInt2 extends java.lang.Number{
 
   def abs(): BigInt2 = {
     if (sign < 0)
-      new BigInt2(1, numberLength, digits)
+      new BigInt2(1, digits)
     else
       this
   }
@@ -142,8 +135,8 @@ class BigInt2 extends java.lang.Number{
       return (if (divisor.sign > 0) this else -this)
     val divisorSign = divisor.sign
     val thisSign = sign
-    val thisLen = numberLength
-    val divisorLen = divisor.numberLength
+    val thisLen = digits.length
+    val divisorLen = divisor.digits.length
     if (thisLen + divisorLen == 2) {
       val value = (if (thisSign != divisorSign) -1 else 1) *(digits(0) & 0xFFFFFFFFL) / (divisor.digits(0) & 0xFFFFFFFFL)
       return BigInt2.valueOf(value)
@@ -165,26 +158,26 @@ class BigInt2 extends java.lang.Number{
         BigInt2.divideArrayByInt(resDigits, digits, thisLen, divisor.digits(0))
       else
         BigInt2.divide(resDigits, resLength, digits, thisLen, divisor.digits, divisorLen)
-      val res = new BigInt2(resSign, resLength, resDigits)
+      val res = new BigInt2(resSign, resDigits)
       res.cutOffLeadingZeroes()
       res
     }
   }
 
   def min(a: BigInt2): BigInt2 =
-    if (this.compareTo(a) == -1) this
+    if (this.compare(a) == -1) this
     else a
 
   def max(a: BigInt2): BigInt2 =
-    if (this.compareTo(a) == 1) this
+    if (this.compare(a) == 1) this
     else a
 
-  def compareTo(a: BigInt2): Int = {
+  def compare(a: BigInt2): Int = {
     if (sign > a.sign) 1
     else if (sign < a.sign) -1
-    else if (numberLength > a.numberLength) sign
-    else if (numberLength < a.numberLength) -a.sign
-    else sign * BigInt2.compareArrays(digits, a.digits, numberLength)
+    else if (digits.length > a.digits.length) sign
+    else if (digits.length < a.digits.length) -a.sign
+    else sign * BigInt2.compareArrays(digits, a.digits, digits.length)
   }
 
   override def intValue(): Int =
@@ -192,7 +185,7 @@ class BigInt2 extends java.lang.Number{
 
   override def longValue(): Long = {
     val value =
-      if (numberLength > 1)
+      if (digits.length > 1)
         ((digits(1).toLong) << 32) | (digits(0) & 0xFFFFFFFFL)
       else
         (digits(0) & 0xFFFFFFFFL)
@@ -203,9 +196,9 @@ class BigInt2 extends java.lang.Number{
     doubleValue.toFloat
 
   override def doubleValue(): Double = {
-    if ((numberLength < 2) || ((numberLength == 2) && (digits(1) > 0)))
+    if ((digits.length < 2) || ((digits.length == 2) && (digits(1) > 0)))
       return longValue.toDouble
-    if (numberLength > 32)
+    if (digits.length > 32)
       return (
         if (sign > 0) Double.PositiveInfinity
         else Double.NegativeInfinity)
@@ -224,7 +217,7 @@ class BigInt2 extends java.lang.Number{
     if (sign == 0)
       this
     else{
-      new BigInt2(-sign, numberLength, digits)
+      new BigInt2(-sign, digits)
     }
   }
 
@@ -261,7 +254,7 @@ class BigInt2 extends java.lang.Number{
     }
   }
 
-  def isOne() = ((numberLength == 1) && (digits(0) == 1))
+  def isOne() = ((digits.length == 1) && (digits(0) == 1))
 
   override def equals(that: Any): Boolean = that match {
     case a: BigInt2 =>
@@ -297,8 +290,7 @@ object BigInt2 {
 
   def toDecimalScaledString(bi: BigInt2, scale: Int): String = {
     var digits = bi.digits
-    val numberLength = bi.numberLength
-    var resLengthInChars = numberLength * 10 + 1 + 7
+    var resLengthInChars = digits.length * 10 + 1 + 7
     var result = new Array[Char](resLengthInChars + 1)
     var currentChar = resLengthInChars
     var x = BigInt(0)
@@ -370,8 +362,8 @@ object BigInt2 {
       return b
     if (bSign == 0)
       return a
-    val aLen = a.numberLength
-    val bLen = b.numberLength
+    val aLen = a.digits.length
+    val bLen = b.digits.length
     if (aLen + bLen == 2) {
       val a1 = a.digits(0) & 0xFFFFFFFFL
       val b1 = b.digits(0) & 0xFFFFFFFFL
@@ -381,7 +373,7 @@ object BigInt2 {
         val valueHi = (res >>> 32).toInt
         return (
           if (valueHi == 0) new BigInt2(aSign, valueLo)
-          else new BigInt2(aSign, 2, Array[Int](valueLo, valueHi))
+          else new BigInt2(aSign, Array[Int](valueLo, valueHi))
         )
       }
       return BigInt2.valueOf(if (aSign < 0) b1 - a1 else a1 - b1)
@@ -411,7 +403,7 @@ object BigInt2 {
         resDigits = subtract(b.digits, bLen, a.digits, aLen)
       }
     }
-    var res = new BigInt2(resSign, resDigits.length, resDigits)
+    var res = new BigInt2(resSign, resDigits)
     res.cutOffLeadingZeroes()
     res
   }
@@ -486,14 +478,14 @@ object BigInt2 {
       val valueHi = (value >>> 32).toInt
       return (
         if (valueHi == 0) new BigInt2(resSign, valueLo)
-        else new BigInt2(resSign, 2, Array(valueLo, valueHi)))
+        else new BigInt2(resSign, Array(valueLo, valueHi)))
     }
     else {
       val aDigits = a.digits
       val bDigits = b.digits
       val resDigits = new Array[Int](resLength)
       multArraysPAP(aDigits, aLen, bDigits, bLen, resDigits)
-      val result = new BigInt2(resSign, resLength, resDigits)
+      val result = new BigInt2(resSign, resDigits)
       result.cutOffLeadingZeroes()
       result
     }
@@ -568,9 +560,9 @@ object BigInt2 {
   def shiftRight(source: BigInt2, count1: Int): BigInt2 = {
     val intCount = count1 >> 5
     val count = count1 & 31
-    if (intCount >= source.numberLength)
+    if (intCount >= source.digits.length)
       return (if (source.sign < 0) MINUS_ONE else ZERO)
-    var resLength = source.numberLength - intCount
+    var resLength = source.digits.length - intCount
     var resDigits = new Array[Int](resLength + 1)
     shiftRight(resDigits, resLength, source.digits, intCount, count)
     if (source.sign < 0) {
@@ -588,7 +580,7 @@ object BigInt2 {
         resDigits(i) += 1
       }
     }
-    val result = new BigInt2(source.sign, resLength, resDigits)
+    val result = new BigInt2(source.sign, resDigits)
     result.cutOffLeadingZeroes
     return result
   }
@@ -628,10 +620,10 @@ object BigInt2 {
   def shiftLeft(source: BigInt2, count: Int): BigInt2 = {
     val intCount = count >> 5
     val count1 = count & 31
-    var resLength = source.numberLength + intCount + (if (count1 == 0) 0 else 1)
+    var resLength = source.digits.length + intCount + (if (count1 == 0) 0 else 1)
     var resDigits = new Array[Int](resLength)
     shiftLeft(resDigits, source.digits, intCount, count1)
-    val result = new BigInt2(source.sign, resLength, resDigits)
+    val result = new BigInt2(source.sign, resDigits)
     result.cutOffLeadingZeroes
     return result
   }

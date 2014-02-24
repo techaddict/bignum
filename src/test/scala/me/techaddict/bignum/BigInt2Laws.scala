@@ -53,6 +53,10 @@ object BigInt2Laws extends Properties("BigInt Law") {
     (a * b) equals (b * a)
   }
 
+  property("a * (b * c) = (a * b) * c") = forAll { (a: BigInt2, b: BigInt2, c: BigInt2) =>
+    (a + (b + c)) equals ((a + b) + c)
+  }
+
   // Below Test's should take care of divide by 0 :P
   /*property("a / a == 1)") = forAll { (a: BigInt2) =>
     (a / a).toString == BigInt2.ONE.toString
