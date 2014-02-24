@@ -16,50 +16,23 @@ object BigInt2Laws extends Properties("BigInt Law") {
 
   def BigIntGen = for (n <- Gen.numStr if (n != "")) yield n
 
-  property("a + b == b + a") = forAll(BigIntGen, BigIntGen) {
-    case (a: String, b: String) =>
-      val biga = new BigInt2(a)
-      val bigb = new BigInt2(b)
-      val bigintegera = new BigInteger(a)
-      val bigintegerb = new BigInteger(b)
-      val res0 = (biga + bigb)
-      val res1 = bigintegera.add( bigintegerb)
-      res0.toString == res1.toString && res0.toString == (bigb + biga).toString
+  implicit val arbBigInt2: Arbitrary[BigInt2] =
+    Arbitrary(arbitrary[BigInt].map(n => new BigInt2(n.toString)))
+
+  property("a + b == b + a") = forAll { (a: BigInt2, b: BigInt2) =>
+    (a + b).toString == (b + a).toString
   }
 
-  property("a + (b + c) = (a + b) + c") = forAll(BigIntGen, BigIntGen, BigIntGen) {
-    case (a: String, b: String, c: String) =>
-      val biga = new BigInt2(a)
-      val bigb = new BigInt2(b)
-      val bigc = new BigInt2(c)
-      val bigintegera = new BigInteger(a)
-      val bigintegerb = new BigInteger(b)
-      val bigintegerc = new BigInteger(c)
-      val res0 = biga + (bigb + bigc)
-      val res1 = bigintegera.add( bigintegerb).add(bigintegerc)
-      res0.toString == res1.toString && res0.toString == ((biga + bigb) + bigc).toString
+  property("a + (b + c) = (a + b) + c") = forAll { (a: BigInt2, b: BigInt2, c: BigInt2) =>
+    (a + (b + c)).toString == ((a + b) + c).toString
   }
 
-  property("a * (b + c) = (a * b) + (a * c)") = forAll(BigIntGen, BigIntGen, BigIntGen) {
-    case (a: String, b: String, c: String) =>
-      val biga = new BigInt2(a)
-      val bigb = new BigInt2(b)
-      val bigc = new BigInt2(c)
-      val bigintegera = new BigInteger(a)
-      val bigintegerb = new BigInteger(b)
-      val bigintegerc = new BigInteger(c)
-      val res0 = biga * (bigb + bigc)
-      val res1 = bigintegera.multiply(bigintegerb.add(bigintegerc))
-      res0.toString == res1.toString && res0.toString == ((biga * bigb) + (biga * bigc)).toString
+  property("a * (b + c) = (a * b) + (a * c)") = forAll { (a: BigInt2, b: BigInt2, c: BigInt2) =>
+    (a * (b + c)).toString == ((a * b) + (a * c)).toString
   }
 
-  property("a + 0 = a") = forAll(BigIntGen) {
-    case (a: String) =>
-      val biga = new BigInt2(a)
-      val bigintegera = new BigInteger(a)
-      val res0 = biga + BigInt2.ZERO
-      val res1 = bigintegera.add(BigInteger.ZERO)
-      res0.toString == res1.toString
+  property("a + 0 == a") = forAll { (a: BigInt2) =>
+    (a + BigInt2.ZERO).toString == a.toString
   }
 
   property("a + (-a) = 0") = forAll(BigIntGen) {
