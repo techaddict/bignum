@@ -136,7 +136,7 @@ class BigInt2 extends java.lang.Number{
     if (divisor.sign == 0)
       throw new ArithmeticException("Divide by Zero")
     if (divisor.isOne)
-      return (if (divisor.sign > 0) this else this.negate)
+      return (if (divisor.sign > 0) this else -this)
     val divisorSign = divisor.sign
     val thisSign = sign
     val thisLen = numberLength
@@ -217,7 +217,7 @@ class BigInt2 extends java.lang.Number{
   def *(a: BigInt2) =
     BigInt2.multiply(this, a)
 
-  def negate(): BigInt2 = {
+  def unary_-(): BigInt2 = {
     if (sign == 0)
       this
     else{
@@ -434,7 +434,7 @@ object BigInt2 {
   }
 
   def subtract(a: BigInt2, b: BigInt2): BigInt2 =
-    add(a, b.negate)
+    add(a, -b)
 
   def subtract(res: Array[Int], a: Array[Int], aSize: Int, b: Array[Int], bSize: Int) {
     var i = 0
