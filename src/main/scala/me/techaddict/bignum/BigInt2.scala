@@ -76,15 +76,9 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int]) extends Ordered[B
     s.drop(pos)
   }
 
-  def +(a: BigInt2) =
-    BigInt2.add(this, a)
+  def +(a: BigInt2) = BigInt2.add(this, a)
 
-  def abs: BigInt2 = {
-    if (sign < 0)
-      new BigInt2(1, digits)
-    else
-      this
-  }
+  def abs: BigInt2 = if (sign < 0) new BigInt2(1, digits) else this
 
   def /(divisor: BigInt2): BigInt2 = {
     if (divisor.sign == 0)
@@ -123,13 +117,9 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int]) extends Ordered[B
     }
   }
 
-  def min(a: BigInt2): BigInt2 =
-    if (this.compare(a) < 0) this
-    else a
+  def min(a: BigInt2): BigInt2 = if (this.compare(a) < 0) this else a
 
-  def max(a: BigInt2): BigInt2 =
-    if (this.compare(a) > 0) this
-    else a
+  def max(a: BigInt2): BigInt2 = if (this.compare(a) > 0) this else a
 
   def compare(that: BigInt2): Int = {
     if (sign > that.sign) 1
@@ -139,57 +129,42 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int]) extends Ordered[B
     else sign * BigInt2.compareArrays(digits, that.digits, digits.size)
   }
 
-  def intValue: Int =
-    (sign * (digits(0)))
+  def intValue: Int = (sign * (digits(0)))
 
   def longValue: Long = {
     val value =
-      if (digits.size > 1)
-        ((digits(1).toLong) << 32) | (digits(0) & 0xFFFFFFFFL)
-      else
-        (digits(0) & 0xFFFFFFFFL)
+      if (digits.size > 1) ((digits(1).toLong) << 32) | (digits(0) & 0xFFFFFFFFL)
+      else (digits(0) & 0xFFFFFFFFL)
     return sign * value
   }
 
   def signum = sign
 
-  def -(a: BigInt2) =
-    BigInt2.subtract(this, a)
+  def -(a: BigInt2) = BigInt2.subtract(this, a)
 
-  def *(a: BigInt2) =
-    BigInt2.multiply(this, a)
+  def *(a: BigInt2) = BigInt2.multiply(this, a)
 
-  def unary_- : BigInt2 = {
-    if (sign == 0)
-      this
-    else{
-      new BigInt2(-sign, digits)
-    }
-  }
+  def unary_- : BigInt2 = if (sign == 0) this else new BigInt2(-sign, digits)
 
-  def <<(n: Int): BigInt2 = {
+  def <<(n: Int): BigInt2 =
     if ((n == 0) || (sign == 0))
       this
     else if (n > 0)
       BigInt2.shiftLeft(this, n)
     else
       BigInt2.shiftRight(this, -n)
-  }
 
-  def >>(n: Int): BigInt2 = {
+  def >>(n: Int): BigInt2 =
     if ((n == 0) || (sign == 0))
       this
     else if (n > 0)
       BigInt2.shiftRight(this, n)
     else
       BigInt2.shiftLeft(this, -n)
-  }
 
-  def shiftLeftOneBit: BigInt2 =
-    if (sign == 0) this
-    else BigInt2.shiftLeft(this, 1)
+  def shiftLeftOneBit: BigInt2 = if (sign == 0) this else BigInt2.shiftLeft(this, 1)
 
-  def equalsArrays(a: Array[Int]): Boolean = {
+  def equalsArrays(a: Array[Int]): Boolean =
     if (a.size != digits.size)
       false
     else {
@@ -198,7 +173,6 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int]) extends Ordered[B
         i -= 1
       (i < 0)
     }
-  }
 
   def isOne = ((digits.size == 1) && (digits(0) == 1))
 
@@ -230,24 +204,19 @@ object BigInt2 {
     481890304, 594823321, 729000000, 887503681, 1073741824, 1291467969, 1544804416,
     1838265625, 60466176)
 
-  def apply(a: String) =
-    new BigInt2(a, 10)
+  def apply(a: String) = new BigInt2(a, 10)
 
-  def apply(a: String, radix: Int) =
-    new BigInt2(a, radix)
+  def apply(a: String, radix: Int) = new BigInt2(a, radix)
 
-  def apply(sign: Int, value: Int) =
-    new BigInt2(sign, Array(value))
+  def apply(sign: Int, value: Int) = new BigInt2(sign, Array(value))
 
-  def apply(sign: Int, value: Array[Int]) =
-    new BigInt2(sign, value)
+  def apply(sign: Int, value: Array[Int]) = new BigInt2(sign, value)
 
-  def random(num: Int, rnd: java.util.Random) = {
+  def random(num: Int, rnd: java.util.Random) =
     if (num < 0)
       throw new IllegalArgumentException("Number of Bits must be non-negative")
-    else if (num == 0) {
+    else if (num == 0)
       zero
-    }
     else {
       val digits = new Array[Int]((num + 31) >> 5)
       for (i <- 0 until digits.size)
@@ -257,9 +226,8 @@ object BigInt2 {
       ret.cutOffLeadingZeroes
       ret
     }
-  }
 
-  def valueOf(a: Long): BigInt2 = {
+  def valueOf(a: Long): BigInt2 =
     if (a < 0) {
       if (a != -1)
         BigInt2(-1, -a.toInt)
@@ -270,7 +238,6 @@ object BigInt2 {
       SMALL_VALUES(a.toInt)
     else
       BigInt2(1, a.toInt)
-  }
 
   private[bignum] def toDecimalScaledString(bi: BigInt2, scale: Int): String = {
     var digits = bi.digits
@@ -290,8 +257,7 @@ object BigInt2 {
     multiplyByInt(a, a, aSize, factor)
 
   private[this] def multiplyByInt(res: Array[Int], a: Array[Int], aSize: Int, factor: Int): Int = {
-    @tailrec
-    def compute(pos: Int, carry: Long): Int = {
+    @tailrec def compute(pos: Int, carry: Long): Int = {
       if (pos < aSize) {
         val tcarry = unsignedMultAddAdd(a(pos), factor, carry.toInt, 0)
         res(pos) = tcarry.toInt
@@ -308,8 +274,7 @@ object BigInt2 {
   private[bignum] def inplaceAdd(a: Array[Int], aSize: Int, addend: Int): Int = {
     var carry = addend & 0xFFFFFFFFL
     var i = 0
-    /*@tailrec
-    def compute(pos: Int, carry: Long): Int = {
+    /*@tailrec def compute(pos: Int, carry: Long): Int = {
       if (pos < aSize && carry != 0) {
         val tcarry = carry + a(pos) & 0xFFFFFFFFL
         val prev = a(pos)
@@ -342,10 +307,8 @@ object BigInt2 {
     val bSign = b.sign
     var resSign = 0
     var resDigits = Array[Int]()
-    if (aSign == 0)
-      return b
-    if (bSign == 0)
-      return a
+    if (aSign == 0) return b
+    if (bSign == 0) return a
     val aLen = a.digits.size
     val bLen = b.digits.size
     if (aLen + bLen == 2) {
@@ -369,12 +332,10 @@ object BigInt2 {
         else add(b.digits, a.digits)
     }
     else {
-      val cmp = (
-        if (aLen != bLen) {
-          if (aLen > bLen) 1
-          else -1
-        }
-        else compareArrays(a.digits, b.digits, aLen))
+      val cmp =
+        if (aLen > bLen) 1
+        else if (aLen < bLen) -1
+        else compareArrays(a.digits, b.digits, aLen)
       if (cmp == 0)
         return zero
       else if (cmp == 1) {
@@ -408,16 +369,13 @@ object BigInt2 {
       carry >>= 32
       i += 1
     }
-    if (carry != 0)
-      res(i) = carry.toInt
+    if (carry != 0) res(i) = carry.toInt
   }
 
   private[this] def add(a: Array[Int], b: Array[Int]): Array[Int] = {
     var res = new Array[Int](a.size + 1)
-    if (a.size >= b.size)
-      add(res, a, b)
-    else
-      add(res, b, a)
+    if (a.size >= b.size) add(res, a, b)
+    else add(res, b, a)
     return res
   }
 
@@ -457,9 +415,8 @@ object BigInt2 {
       val value = unsignedMultAddAdd(a.digits(0), b.digits(0), 0, 0)
       val valueLo = value.toInt
       val valueHi = (value >>> 32).toInt
-      return (
-        if (valueHi == 0) BigInt2(resSign, valueLo)
-        else BigInt2(resSign, Array(valueLo, valueHi)))
+      if (valueHi == 0) BigInt2(resSign, valueLo)
+      else BigInt2(resSign, Array(valueLo, valueHi))
     }
     else {
       val aDigits = a.digits
@@ -475,14 +432,10 @@ object BigInt2 {
   private[this] def multArraysPAP(a: Array[Int], b: Array[Int], res: Array[Int]) {
     val aLen = a.size
     val bLen = b.size
-    if (!(aLen == 0 || bLen == 0)) {
-      if (aLen == 1)
-        res(bLen) = multiplyByInt(res, b, bLen, a(0))
-      else if (bLen == 1)
-        res(aLen) = multiplyByInt(res, a, aLen, b(0))
-      else
-        multPAP(a, b, res)
-    }
+    if (!(aLen == 0 || bLen == 0))
+      if (aLen == 1) res(bLen) = multiplyByInt(res, b, bLen, a(0))
+      else if (bLen == 1) res(aLen) = multiplyByInt(res, a, aLen, b(0))
+      else multPAP(a, b, res)
   }
 
   private[this] def multPAP(a: Array[Int], b: Array[Int], t: Array[Int]) {
@@ -587,8 +540,7 @@ object BigInt2 {
     else {
       val leftShiftCount = 32 - count
       allZero &= (source(intCount) << leftShiftCount) == 0
-      @tailrec
-      def compute(pos: Int): Int = {
+      @tailrec def compute(pos: Int): Int = {
         if (pos < resLen -1){
           res(pos) = (source(pos + intCount) >>> count) |
             (source(pos + intCount + 1) << leftShiftCount)
@@ -693,8 +645,7 @@ object BigInt2 {
         var rem = (res >> 32).toInt
         if (guessDigit != 0) {
           guessDigit += 1
-          @tailrec
-          def compute(rOverflowed: Boolean, leftHand: Long, rightHand: Long) {
+          @tailrec def compute(rOverflowed: Boolean, leftHand: Long, rightHand: Long) {
             guessDigit -= 1
             if (!rOverflowed){
               val left = (guessDigit & 0xFFFFFFFFL) * (normB(bLen - 2) & 0xFFFFFFFFL)
@@ -770,8 +721,7 @@ object BigInt2 {
   }
 
   private[this] def multiplyAndSubtract(a: Array[Int], start: Int, b: Array[Int], bLen: Int, c: Int) = {
-    @tailrec
-    def compute(pos: Int, carry0: Long, carry1: Long): (Long, Long) = {
+    @tailrec def compute(pos: Int, carry0: Long, carry1: Long): (Long, Long) = {
       if (pos < bLen) {
         val tcarry0 = unsignedMultAddAdd(b(pos), c, carry0.toInt, 0)
         val tcarry1 = carry1 + (a(start + pos) & 0xFFFFFFFFL) - (tcarry0 & 0xFFFFFFFFL)
