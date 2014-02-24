@@ -14,8 +14,8 @@ class BigInt2 extends java.lang.Number{
       throw new NumberFormatException("Zero length BigInteger")
     val a = removeLeadingZeroes(a1)
     if (a == "") {
-      sign = 0
-      digits = Array[Int](0)
+      this.sign = 0
+      this.digits = Array(0)
     }
     else {
       val digitFitInInt = Array(0, 0, 30, 19, 15, 13, 11, 11, 10, 9, 9, 8, 8, 8, 8, 7, 7,
@@ -57,6 +57,10 @@ class BigInt2 extends java.lang.Number{
       this.digits = digits
       this.numberLength = numberLength
       this.cutOffLeadingZeroes()
+      /*if (digits.length == 0) {
+        this.sign = 0
+        this.digits = Array(0)
+      }*/
     }
   }
 
@@ -94,13 +98,15 @@ class BigInt2 extends java.lang.Number{
     this(sign, 1, Array(value))
 
   private def cutOffLeadingZeroes() {
+    // should be replaced by dropWhile
     def counter(pos: Int): Int = {
       if (pos >= 0 && digits(pos) == 0)
         counter(pos - 1)
       else pos
     }
     val pos = counter(digits.length - 1)
-    if (pos != digits.length - 1) {
+    // Check if pos != digits last elem and for Zero
+    if (pos != digits.length - 1 && digits.length != 1) {
       digits = digits.dropRight(digits.length - pos - 1)
       numberLength = digits.length
     }
@@ -457,7 +463,10 @@ object BigInt2 {
     val aLen = a.numberLength
     val bLen = b.numberLength
     val resLength = aLen + bLen
-    val resSign = if (a.sign != b.sign) -1 else 1
+    val resSign =
+      if (0 == a.sign || 0 == b.sign) 0
+      else if (a.sign != b.sign) -1
+      else 1
     if (resLength == 2) {
       val value = unsignedMultAddAdd(a.digits(0), b.digits(0), 0, 0)
       val valueLo = value.toInt
