@@ -462,7 +462,7 @@ object BigInt2 {
     var carry = 0L
     for (i <- 0 until aLen) {
       carry = 0L
-      for (j <- i+1 until aLen) {
+      for (j <- i + 1 until aLen) {
         carry = unsignedMultAddAdd(a(i), a(j), res(i + j), carry.toInt)
         res(i + j) = carry.toInt
         carry >>>= 32
@@ -470,28 +470,32 @@ object BigInt2 {
       res(i + aLen) = carry.toInt
     }
     shiftLeftOneBit(res, res, aLen << 1)
-    carry = 0L
-    var index = 0
-    for (i <- 0 until aLen) {
-      carry = unsignedMultAddAdd(a(i), a(i), res(index), carry.toInt)
-      res(index) = carry.toInt
-      carry >>>= 32
-      index += 1
-      carry += res(index) & 0xFFFFFFFL
-      res(index) = carry.toInt
-      carry >>>= 32
-      index += 1
+    @tailrec def compute(pos: Int, tindex: Int, tcarry: Long) {
+      if (pos < aLen) {
+        var carry = unsignedMultAddAdd(a(pos), a(pos), res(tindex), tcarry.toInt)
+        res(tindex) = carry.toInt
+        carry >>>= 32
+        var index = tindex + 1
+        carry += res(index) & 0xFFFFFFFL
+        res(index) = carry.toInt
+        index += 1
+        compute(pos + 1, index, carry >>> 32)
+      }
     }
+    compute(0, 0, 0L)
     res
   }
 
   private[this] def shiftLeftOneBit(result: Array[Int], source: Array[Int], srcLen: Int) {
-    var carry = 0
-    for (i <- 0 until srcLen) {
-      val value = source(i)
-      result(i) = (value << 1) | carry
-      carry = value >>> 31
+    @tailrec def compute(pos: Int, carry: Int): Int = {
+      if (pos < srcLen) {
+        val value = source(pos)
+        result(pos) = (value << 1) | carry
+        compute(pos + 1, value >>> 31)
+      }
+      else carry
     }
+    val carry = compute(0, 0)
     if (carry != 0)
       result(srcLen) = carry
   }
@@ -500,28 +504,35 @@ object BigInt2 {
     val intCount = count1 >> 5
     val count = count1 & 31
     if (intCount >= source.digits.size)
-      return (if (source.sign < 0) minusOne else zero)
-    var resLength = source.digits.size - intCount
-    var resDigits = new Array[Int](resLength + 1)
-    shiftRight(resDigits, resLength, source.digits, intCount, count)
-    if (source.sign < 0) {
-      var i = 0
-      while (i < intCount && source.digits(i) == 0)
-        i += 1
-      if ((i < intCount) || ((count >0) && ((source.digits(i) << (32 - count)) != 0))) {
-        i = 0
-        while (i < resLength && resDigits(i) == -1) {
-          i += 1
-          resDigits(i) = 0
+      if (source.sign < 0) minusOne else zero
+    else {
+      var resLen = source.digits.size - intCount
+      val res = new Array[Int](resLen + 1)
+      shiftRight(res, resLen, source.digits, intCount, count)
+      if (source.sign < 0) {
+        @tailrec def rec(pos: Int): Int = {
+          if (pos < intCount && source.digits(pos) == 0)
+            rec(pos + 1)
+          else pos
         }
-        if (i == resLength)
-          resLength += 1
-        resDigits(i) += 1
+        val pos = rec(0)
+        if ((pos < intCount) || ((count >0) && ((source.digits(pos) << (32 - count)) != 0))) {
+          @tailrec def rec1(pos: Int): Int = {
+            if (pos < intCount && source.digits(pos) == -1){
+              res(pos + 1) = 0
+              rec1(pos + 1)
+            }
+            else pos
+          }
+          val i = rec1(0)
+          if (i == resLen) resLen += 1
+          res(i) += 1
+        }
       }
+      val result = new BigInt2(source.sign, res)
+      result.cutOffLeadingZeroes
+      result
     }
-    val result = new BigInt2(source.sign, resDigits)
-    result.cutOffLeadingZeroes
-    return result
   }
 
   private[this] def shiftRight(res: Array[Int], resLen: Int, source: Array[Int],
@@ -559,10 +570,10 @@ object BigInt2 {
   private[bignum] def shiftLeft(source: BigInt2, count: Int): BigInt2 = {
     val intCount = count >> 5
     val count1 = count & 31
-    var resLength = source.digits.size + intCount + (if (count1 == 0) 0 else 1)
-    var resDigits = new Array[Int](resLength)
-    shiftLeft(resDigits, source.digits, intCount, count1)
-    val result = new BigInt2(source.sign, resDigits)
+    val resLength = source.digits.size + intCount + (if (count1 == 0) 0 else 1)
+    val res = new Array[Int](resLength)
+    shiftLeft(res, source.digits, intCount, count1)
+    val result = BigInt2(source.sign, res)
     result.cutOffLeadingZeroes
     return result
   }
@@ -572,13 +583,16 @@ object BigInt2 {
       System.arraycopy(source, 0, res, intCount, res.size - intCount)
     else {
       val rightShiftCount = 32 - count
-      var i = res.size - 1
-      res(i) == 0
-      while (i > intCount){
-        res(i) |= (source(i - intCount - 1) >>> rightShiftCount)
-        res(i - 1) = source(i - intCount - 1) << count
-        i -= 1
+      val start = res.size - 1
+      res(start) == 0
+      @tailrec def compute(pos: Int) {
+        if (pos > intCount) {
+          res(pos) |= (source(pos - intCount - 1) >>> rightShiftCount)
+          res(pos - 1) = source(pos - intCount - 1) << count
+          compute(pos - 1)
+        }
       }
+      compute(start)
     }
     for (i <- 0 until intCount)
       res(i) = 0
