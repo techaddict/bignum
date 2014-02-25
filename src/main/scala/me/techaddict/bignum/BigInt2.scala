@@ -207,7 +207,7 @@ object BigInt2 {
   def apply(a: String) = new BigInt2(a, 10)
   def apply(a: String, radix: Int) = new BigInt2(a, radix)
   def apply(sign: Int, value: Int) = new BigInt2(sign, Array(value))
-  def apply(sign: Int, value: Array[Int]) = new BigInt2(sign, value)
+  private[bignum] def apply(sign: Int, value: Array[Int]) = new BigInt2(sign, value)
   def apply(a: Int) = valueOf(a)
   def apply(a: Long) = valueOf(a)
 
