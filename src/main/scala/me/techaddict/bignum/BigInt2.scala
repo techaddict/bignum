@@ -96,7 +96,7 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int]) extends Ordered[B
     }
     val cmp =
       if (thisLen != divisorLen) {if (thisLen > divisorLen) 1 else -1}
-      else BigInt2.compareArrays(digits, divisor.digits, thisLen)
+      else BigInt2.compareArrays(digits, divisor.digits)
     if (cmp == 0){
       if (thisSign == divisorSign) BigInt2.one
       else BigInt2.minusOne
@@ -126,7 +126,7 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int]) extends Ordered[B
     else if (sign < that.sign) -1
     else if (digits.size > that.digits.size) sign
     else if (digits.size < that.digits.size) -that.sign
-    else sign * BigInt2.compareArrays(digits, that.digits, digits.size)
+    else sign * BigInt2.compareArrays(digits, that.digits)
   }
 
   def intValue: Int = if (digits.length < 2) sign * digits(0) else -1
@@ -286,12 +286,15 @@ object BigInt2 {
     compute(0, addend & 0xFFFFFFFFL)
   }
 
-  private[bignum] def compareArrays(a: Array[Int], b: Array[Int], size: Int): Int = {
-    var i = size - 1
-    while((i >= 0) && (a(i) == b(i)))
-      i -= 1
-    if (i < 0) 0
-    else if ((a(i) & 0xFFFFFFFFL) < (b(i) & 0xFFFFFFFFL)) -1
+  private[bignum] def compareArrays(a: Array[Int], b: Array[Int]): Int = {
+    @tailrec def rec(pos: Int): Int = {
+      if (pos >= 0 && a(pos) == b(pos))
+        rec(pos - 1)
+      else pos
+    }
+    val pos = rec(a.size - 1)
+    if (pos < 0) 0
+    else if ((a(pos) & 0xFFFFFFFFL) < (b(pos) & 0xFFFFFFFFL)) -1
     else 1
   }
 
@@ -326,7 +329,7 @@ object BigInt2 {
       val cmp =
         if (aLen > bLen) 1
         else if (aLen < bLen) -1
-        else compareArrays(a.digits, b.digits, aLen)
+        else compareArrays(a.digits, b.digits)
       if (cmp == 0)
         return zero
       else if (cmp == 1) {
