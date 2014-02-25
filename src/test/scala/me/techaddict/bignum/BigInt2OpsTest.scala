@@ -52,15 +52,19 @@ object BigInt2OpsTest extends Properties("BigInt Op") {
   }
 
   property("BigInt2.valueOf") = forAll { (a: Int) =>
-    BigInt2.valueOf(a.toLong).longValue == a.toLong
+    BigInt2.valueOf(a).intValue == a
+  }
+
+  property("BigInt2.valueOf") = forAll { (a: Long) =>
+    BigInt2.valueOf(a).longValue == a
   }
 
   property("a.intValue") = forAll { (a: Int) =>
-    BigInt2.valueOf(a.toLong).intValue == a
+    BigInt2.valueOf(a).intValue == a
   }
 
   property("a.longValue") = forAll { (a: Long) =>
-    BigInt2(a.toString).longValue == a
+    BigInt2.valueOf(a).longValue == a
   }
 
   property("a.signum") = forAll { (a: BigInt2) =>

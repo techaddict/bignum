@@ -229,18 +229,30 @@ object BigInt2 {
       ret
     }
 
-  // Takes a Long as input due to overflow problems, but treats it as Int
   def valueOf(a: Long): BigInt2 =
+    if (a == Long.MinValue)
+      BigInt2("-9223372036854775808")
+    else if (a < 0) {
+      -valueOf(-a)
+    }
+    else {
+      val Lo = a.toInt
+      val Hi = (a >>> 32).toInt
+      if (Hi == 0) BigInt2(a.signum, Lo)
+      else BigInt2(a.signum, Array[Int](Lo, Hi))
+    }
+
+  def valueOf(a: Int): BigInt2 =
     if (a < 0) {
       if (a != -1)
-        BigInt2(-1, -a.toInt)
+        BigInt2(-1, -a)
       else
         minusOne
     }
     else if (a <= 10)
-      smallValues(a.toInt)
+      smallValues(a)
     else
-      BigInt2(1, a.toInt)
+      BigInt2(1, a)
 
   private[bignum] def toDecimalScaledString(bi: BigInt2, scale: Int): String = {
     var digits = bi.digits
