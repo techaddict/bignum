@@ -357,25 +357,25 @@ object BigInt2 {
   private[this] def add(res: Array[Int], a: Array[Int], b: Array[Int]) {
     var carry = (a(0) & 0xFFFFFFFFL) + (b(0) & 0xFFFFFFFFL)
     res(0) = carry.toInt
-    carry >>= 32
-    var i = 1
-    while (i < b.size) {
-      carry += (a(i) & 0xFFFFFFFFL) + (b(i) & 0xFFFFFFFFL)
-      res(i) = carry.toInt
-      carry >>= 32
-      i += 1
+    @tailrec def compute(pos: Int, carry: Long) {
+      if (pos < b.size) {
+        val tcarry = carry + (a(pos) & 0xFFFFFFFFL) + (b(pos) & 0xFFFFFFFFL)
+        res(pos) = tcarry.toInt
+        compute(pos + 1, tcarry >> 32)
+      }
+      else if (pos < a.size) {
+        val tcarry = carry + (a(pos) & 0xFFFFFFFFL)
+        res(pos) = tcarry.toInt
+        compute(pos + 1, tcarry >> 32)
+      }
+      else if (carry != 0)
+        res(pos) = carry.toInt
     }
-    while(i < a.size) {
-      carry += a(i) & 0xFFFFFFFFL
-      res(i) = carry.toInt
-      carry >>= 32
-      i += 1
-    }
-    if (carry != 0) res(i) = carry.toInt
+    compute(1, carry >> 32)
   }
 
   private[this] def add(a: Array[Int], b: Array[Int]): Array[Int] = {
-    var res = new Array[Int](a.size + 1)
+    val res = new Array[Int](a.size + 1)
     if (a.size >= b.size) add(res, a, b)
     else add(res, b, a)
     return res
@@ -384,26 +384,21 @@ object BigInt2 {
   private[bignum] def subtract(a: BigInt2, b: BigInt2): BigInt2 =
     add(a, -b)
 
-  private[this] def subtract(res: Array[Int], a: Array[Int], b: Array[Int]) {
-    var i = 0
-    var borrow = 0L
-    while (i < b.size) {
-      borrow += (a(i) & 0xFFFFFFFFL) - (b(i) & 0xFFFFFFFFL)
-      res(i) = borrow.toInt
-      borrow >>= 32
-      i += 1
-    }
-    while(i < a.size) {
-      borrow += a(i) & 0xFFFFFFFFL
-      res(i) = borrow.toInt
-      borrow >>= 32
-      i += 1
-    }
-  }
-
   private[this] def subtract(a: Array[Int], b: Array[Int]): Array[Int] = {
-    var res = new Array[Int](a.size)
-    subtract(res, a, b)
+    val res = new Array[Int](a.size)
+    @tailrec def compute(pos: Int, borrow: Long) {
+      if (pos < b.size) {
+        val tborrow = borrow + (a(pos) & 0xFFFFFFFFL) - (b(pos) & 0xFFFFFFFFL)
+        res(pos) = tborrow.toInt
+        compute(pos + 1, tborrow >> 32)
+      }
+      else if (pos < a.size) {
+        val tborrow = borrow + (a(pos) & 0xFFFFFFFFL)
+        res(pos) = tborrow.toInt
+        compute(pos + 1, tborrow >> 32)
+      }
+    }
+    compute(0, 0L)
     return res
   }
 
@@ -421,11 +416,9 @@ object BigInt2 {
       else BigInt2(resSign, Array(valueLo, valueHi))
     }
     else {
-      val aDigits = a.digits
-      val bDigits = b.digits
       val resDigits = new Array[Int](resLength)
-      multArraysPAP(aDigits, bDigits, resDigits)
-      val result = new BigInt2(resSign, resDigits)
+      multArraysPAP(a.digits, b.digits, resDigits)
+      val result = BigInt2(resSign, resDigits)
       result.cutOffLeadingZeroes
       result
     }
@@ -441,7 +434,7 @@ object BigInt2 {
   }
 
   private[this] def multPAP(a: Array[Int], b: Array[Int], t: Array[Int]) {
-    if (a == b && a.size == b.size)
+    if (a.size == b.size && a == b)
       square(a, t)
     else {
       for (i <- 0 until a.size) {
