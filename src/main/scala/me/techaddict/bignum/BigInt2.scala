@@ -322,14 +322,8 @@ object BigInt2 {
     if (aLen + bLen == 2) {
       val a1 = a.digits(0) & 0xFFFFFFFFL
       val b1 = b.digits(0) & 0xFFFFFFFFL
-      if (aSign == bSign) {
-        val res = a1 + b1
-        val valueLo = res.toInt
-        val valueHi = (res >>> 32).toInt
-        return if (valueHi == 0) BigInt2(aSign, valueLo)
-          else BigInt2(aSign, Array[Int](valueLo, valueHi))
-      }
-      return BigInt2.valueOf(if (aSign < 0) b1 - a1 else a1 - b1)
+      if (aSign == bSign) return BigInt2.valueOf(aSign * (a1 + b1))
+      else return BigInt2.valueOf(if (aSign < 0) b1 - a1 else a1 - b1)
     }
     else if (aSign == bSign) {
       resSign = aSign
@@ -406,10 +400,7 @@ object BigInt2 {
       else 1
     if (resLength == 2) {
       val value = unsignedMultAddAdd(a.digits(0), b.digits(0), 0, 0)
-      val valueLo = value.toInt
-      val valueHi = (value >>> 32).toInt
-      if (valueHi == 0) BigInt2(resSign, valueLo)
-      else BigInt2(resSign, Array(valueLo, valueHi))
+      BigInt2.valueOf(resSign * value)
     }
     else {
       val resDigits = new Array[Int](resLength)
