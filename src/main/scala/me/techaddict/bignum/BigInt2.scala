@@ -111,7 +111,7 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int]) extends Ordered[B
         BigInt2.divideArrayByInt(resDigits, digits, divisor.digits(0))
       else
         BigInt2.divide(resDigits, digits, divisor.digits)
-      val res = new BigInt2(resSign, resDigits)
+      val res = BigInt2(resSign, resDigits)
       res.cutOffLeadingZeroes
       res
     }
@@ -144,7 +144,7 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int]) extends Ordered[B
 
   def *(a: BigInt2) = BigInt2.multiply(this, a)
 
-  def unary_- : BigInt2 = if (sign == 0) this else new BigInt2(-sign, digits)
+  def unary_- : BigInt2 = if (sign == 0) this else BigInt2(-sign, digits)
 
   def <<(n: Int): BigInt2 =
     if ((n == 0) || (sign == 0))
@@ -349,7 +349,7 @@ object BigInt2 {
         resDigits = subtract(b.digits, a.digits)
       }
     }
-    var res = new BigInt2(resSign, resDigits)
+    var res = BigInt2(resSign, resDigits)
     res.cutOffLeadingZeroes
     res
   }
@@ -522,7 +522,7 @@ object BigInt2 {
           res(i) += 1
         }
       }
-      val result = new BigInt2(source.sign, res)
+      val result = BigInt2(source.sign, res)
       result.cutOffLeadingZeroes
       result
     }
