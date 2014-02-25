@@ -162,8 +162,6 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int]) extends Ordered[B
     else
       BigInt2.shiftLeft(this, -n)
 
-  def shiftLeftOneBit: BigInt2 = if (sign == 0) this else BigInt2.shiftLeft(this, 1)
-
   private[this] def equalsArrays(a: Array[Int]): Boolean =
     if (a.size != digits.size)
       false
@@ -404,69 +402,41 @@ object BigInt2 {
     }
     else {
       val resDigits = new Array[Int](resLength)
-      multArraysPAP(a.digits, b.digits, resDigits)
+      multArraysInplace(a.digits, b.digits, resDigits)
       val result = BigInt2(resSign, resDigits)
       result.cutOffLeadingZeroes
       result
     }
   }
 
-  private[this] def multArraysPAP(a: Array[Int], b: Array[Int], res: Array[Int]) {
+  private[this] def multArraysInplace(a: Array[Int], b: Array[Int], res: Array[Int]) {
     val aLen = a.size
     val bLen = b.size
     if (!(aLen == 0 || bLen == 0))
       if (aLen == 1) res(bLen) = multiplyByInt(res, b, bLen, a(0))
       else if (bLen == 1) res(aLen) = multiplyByInt(res, a, aLen, b(0))
-      else multPAP(a, b, res)
+      else multInplace(a, b, res)
   }
 
-  private[this] def multPAP(a: Array[Int], b: Array[Int], t: Array[Int]) {
-    if (a.size == b.size && a == b)
-      square(a, t)
-    else {
-      for (i <- 0 until a.size) {
-        var carry = 0L
-        var aI = a(i)
-        for (j <- 0 until b.size) {
-          carry = unsignedMultAddAdd(aI, b(j), t(i + j), carry.toInt)
-          t(i + j) = carry.toInt
-          carry >>>= 32
+  private[this] def multInplace(a: Array[Int], b: Array[Int], t: Array[Int]) {
+    @tailrec def loop(pos: Int) {
+      if (pos < a.size) {
+        @tailrec def loopj(posj: Int, carry: Long): Int = {
+          if (posj < b.size) {
+            var tcarry = unsignedMultAddAdd(a(pos), b(posj), t(pos + posj), carry.toInt)
+            t(pos + posj) = tcarry.toInt
+            loopj(posj + 1, tcarry >>> 32)
+          }
+          else carry.toInt
         }
-        t(i + b.size) = carry.toInt
+        t(pos + b.size) = loopj(0, 0L)
+        loop(pos + 1)
       }
     }
+    loop(0)
   }
 
-  private[this] def square(a: Array[Int], res: Array[Int]): Array[Int] = {
-    val aLen = a.size
-    var carry = 0L
-    for (i <- 0 until aLen) {
-      carry = 0L
-      for (j <- i + 1 until aLen) {
-        carry = unsignedMultAddAdd(a(i), a(j), res(i + j), carry.toInt)
-        res(i + j) = carry.toInt
-        carry >>>= 32
-      }
-      res(i + aLen) = carry.toInt
-    }
-    shiftLeftOneBit(res, res, aLen << 1)
-    @tailrec def compute(pos: Int, tindex: Int, tcarry: Long) {
-      if (pos < aLen) {
-        var carry = unsignedMultAddAdd(a(pos), a(pos), res(tindex), tcarry.toInt)
-        res(tindex) = carry.toInt
-        carry >>>= 32
-        var index = tindex + 1
-        carry += res(index) & 0xFFFFFFFL
-        res(index) = carry.toInt
-        index += 1
-        compute(pos + 1, index, carry >>> 32)
-      }
-    }
-    compute(0, 0, 0L)
-    res
-  }
-
-  private[this] def shiftLeftOneBit(result: Array[Int], source: Array[Int], srcLen: Int) {
+  private[this] def shiftLeftOnce(result: Array[Int], source: Array[Int], srcLen: Int) {
     @tailrec def compute(pos: Int, carry: Int): Int = {
       if (pos < srcLen) {
         val value = source(pos)

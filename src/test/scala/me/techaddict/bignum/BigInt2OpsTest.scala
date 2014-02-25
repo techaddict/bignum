@@ -83,8 +83,4 @@ object BigInt2OpsTest extends Properties("BigInt Op") {
     (a >> b.toInt) equals (BigInt(a.toString) >> b.toInt)
   }
 
-  property("a.shiftLeftOneBit") = forAll { (a: BigInt2) =>
-      (a.shiftLeftOneBit) equals (BigInt(a.toString) << 1)
-  }
-
 }
