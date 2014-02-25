@@ -526,25 +526,24 @@ object BigInt2 {
       else
         true
     }
-    var allZero = compute(0)
     if (count == 0) {
       System.arraycopy(source, intCount, res, 0, resLen)
+      compute(0)
     }
     else {
       val leftShiftCount = 32 - count
-      allZero &= (source(intCount) << leftShiftCount) == 0
-      @tailrec def compute(pos: Int): Int = {
+      @tailrec def compute1(pos: Int): Int = {
         if (pos < resLen -1){
           res(pos) = (source(pos + intCount) >>> count) |
             (source(pos + intCount + 1) << leftShiftCount)
-          compute(pos + 1)
+          compute1(pos + 1)
         }
         else pos
       }
-      val i = compute(0)
+      val i = compute1(0)
       res(i) = (source(i + intCount) >>> count)
+      compute(0) & (source(intCount) << leftShiftCount) == 0
     }
-    allZero
   }
 
   private[bignum] def shiftLeft(source: BigInt2, count: Int): BigInt2 = {
