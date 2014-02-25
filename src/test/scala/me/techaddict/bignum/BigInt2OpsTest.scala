@@ -17,6 +17,24 @@ object BigInt2OpsTest extends Properties("BigInt Op") {
   implicit val arbBigInt2: Arbitrary[BigInt2] =
     Arbitrary(arbitrary[BigInt].map(n => BigInt2(n.toString)))
 
+  property("a + b") = forAll { (a: BigInt2, b: BigInt2) =>
+    (a + b) equals (BigInt(a.toString) + BigInt(b.toString))
+  }
+
+  property("a - b") = forAll { (a: BigInt2, b: BigInt2) =>
+    (a - b) equals (BigInt(a.toString) - BigInt(b.toString))
+  }
+
+  property("a * b") = forAll { (a: BigInt2, b: BigInt2) =>
+    (a * b) equals (BigInt(a.toString) * BigInt(b.toString))
+  }
+
+  property("a / b") = forAll { (a: BigInt2, b: BigInt2) =>
+    if (b equals BigInt2.zero == false)
+      (a / b) equals (BigInt(a.toString) / BigInt(b.toString))
+    else true
+  }
+
   property("a.abs") = forAll { (a: BigInt2) =>
     a.abs equals BigInt(a.toString).abs
   }

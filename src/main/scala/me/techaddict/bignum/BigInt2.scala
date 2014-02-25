@@ -110,7 +110,7 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int]) extends Ordered[B
       if (divisorLen == 1)
         BigInt2.divideArrayByInt(resDigits, digits, divisor.digits(0))
       else
-        BigInt2.divide(resDigits, resLength, digits, divisor.digits)
+        BigInt2.divide(resDigits, digits, divisor.digits)
       val res = new BigInt2(resSign, resDigits)
       res.cutOffLeadingZeroes
       res
@@ -584,42 +584,46 @@ object BigInt2 {
       res(i) = 0
   }
 
+  // Could be broken into divideLongByInt
   private[bignum] def divideArrayByInt(dest: Array[Int], src: Array[Int], divisor: Int): Int = {
-    var rem = 0L
-    var bLong = divisor & 0xFFFFFFFFL
-    for (i <- src.size - 1 to 0 by -1) {
-      val temp = (rem << 32) | (src(i) & 0xffffffffL)
-      val quot =
-        if (temp >= 0) {
-          rem = (temp % bLong)
-          (temp / bLong)
-        }
-        else {
-          val aPos = temp >>> 1
-          val bPos = divisor >>> 1
-          var quot = aPos / bPos
-          rem = aPos % bPos
-          rem = (rem << 1 + temp & 1)
-          if ((divisor & 1) != 0) {
-            if (quot <= rem)
-              rem = -quot
-            else if (quot - rem <= bLong) {
-              rem += bLong - quot
-              quot -= 1
-            }
-            else {
-              rem += (bLong << 1) - quot
-              quot -= 2
-            }
+    var b = divisor & 0xFFFFFFFFL
+    @tailrec def compute(pos: Int, trem: Long): Int = {
+      if (pos >= 0) {
+        var rem = trem
+        val temp = (rem << 32) | (src(pos) & 0xffffffffL)
+        val quot =
+          if (temp >= 0) {
+            rem = (temp % b)
+            (temp / b)
           }
-          quot
-        }
-      dest(i) = (quot & 0xFFFFFFFFL).toInt
+          else {
+            val aPos = temp >>> 1
+            val bPos = divisor >>> 1
+            var quot = aPos / bPos
+            rem = ((aPos % bPos) << 1) + (temp & 1)
+            if ((divisor & 1) != 0) {
+              if (quot <= rem)
+                rem = -quot
+              else if (quot - rem <= b) {
+                rem += b - quot
+                quot -= 1
+              }
+              else {
+                rem += (b << 1) - quot
+                quot -= 2
+              }
+            }
+            quot
+          }
+        dest(pos) = (quot & 0xFFFFFFFFL).toInt
+        compute(pos - 1, rem)
+      }
+      else trem.toInt
     }
-    rem.toInt
+    compute(src.size - 1, 0L)
   }
 
-  private[bignum] def divide(quot: Array[Int], quotLen: Int, a: Array[Int], b: Array[Int]): Array[Int] = {
+  private[bignum] def divide(quot: Array[Int], a: Array[Int], b: Array[Int]): Array[Int] = {
     val aLen = a.size
     val bLen = b.size
     val normA = new Array[Int](aLen + 1)
@@ -634,7 +638,7 @@ object BigInt2 {
       System.arraycopy(b, 0, normB, 0, bLen)
     }
     val firstDivisorDigit = normB(bLen - 1)
-    var i = quotLen -1
+    var i = quot.size -1
     var j = aLen
     while (i >= 0) {
       var guessDigit = 0
@@ -666,7 +670,7 @@ object BigInt2 {
           compute(false, 0L, 0L)
         }
         if (guessDigit != 0) {
-          val borrow = multiplyAndSubtract(normA, j - bLen, normB, bLen, guessDigit)
+          val borrow = multiplyAndSubtract(normA, j - bLen, normB, guessDigit)
           if (borrow != 0) {
             guessDigit -= 1
             var carry = 0L
@@ -693,28 +697,24 @@ object BigInt2 {
     }
   }
 
-  private[this] def divideLongByInt(a: Long, b: Int): Long = {
-    val bLong = b & 0xFFFFFFFFL
-    if (a >= 0) {
-      val quot = (a / bLong)
-      val rem = (a % bLong)
-      (rem << 32) | (quot & 0xffffffffL)
-    }
+  private[this] def divideLongByInt(a: Long, bInt: Int): Long = {
+    val b = bInt & 0xFFFFFFFFL
+    if (a >= 0)
+      ((a % b) << 32) | ((a / b) & 0xffffffffL)
     else {
       val aPos = a >>> 1
       val bPos = b >>> 1
       var quot: Long = aPos / bPos
-      var rem: Long = aPos % bPos
-      rem = (rem << 1) + (a & 1)
+      var rem: Long = ((aPos % bPos) << 1) + (a & 1)
       if ((b & 1) != 0) {
         if (quot <= rem)
           rem -= quot
-        else if (quot - rem <= bLong) {
-          rem += bLong - quot
+        else if (quot - rem <= b) {
+          rem += b - quot
           quot -= 1
         }
         else {
-          rem += (bLong << 1) - quot
+          rem += (b << 1) - quot
           quot -= 2
         }
       }
@@ -722,20 +722,21 @@ object BigInt2 {
     }
   }
 
-  private[this] def multiplyAndSubtract(a: Array[Int], start: Int, b: Array[Int], bLen: Int, c: Int) = {
-    @tailrec def compute(pos: Int, carry0: Long, carry1: Long): (Long, Long) = {
+  private[this] def multiplyAndSubtract(a: Array[Int], start: Int, b: Array[Int], c: Int) = {
+    val bLen = b.size - 1
+    @tailrec def compute(pos: Int, carry0: Long, carry1: Long): Long = {
       if (pos < bLen) {
         val tcarry0 = unsignedMultAddAdd(b(pos), c, carry0.toInt, 0)
         val tcarry1 = carry1 + (a(start + pos) & 0xFFFFFFFFL) - (tcarry0 & 0xFFFFFFFFL)
         a(start + pos) = tcarry1.toInt
         compute(pos + 1, tcarry0 >>> 32, tcarry1 >> 32)
       }
-      else (carry0, carry1)
+      else carry1 - carry0
     }
     val res = compute(0, 0L, 0L)
-    val carry1 = (a(start + bLen) & 0xFFFFFFFFL) - res._1 + res._2
-    a(start + bLen) = carry1.toInt
-    (carry1 >> 32).toInt
+    val carry = (a(start + bLen) & 0xFFFFFFFFL) + res
+    a(start + bLen) = carry.toInt
+    (carry >> 32).toInt
   }
 
 }
