@@ -229,6 +229,7 @@ object BigInt2 {
       ret
     }
 
+  // Takes a Long as input due to overflow problems, but treats it as Int
   def valueOf(a: Long): BigInt2 =
     if (a < 0) {
       if (a != -1)

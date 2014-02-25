@@ -51,13 +51,17 @@ object BigInt2OpsTest extends Properties("BigInt Op") {
     (a compare b) equals (BigInt(a.toString) compare BigInt(b.toString))
   }
 
+  property("BigInt2.valueOf") = forAll { (a: Int) =>
+    BigInt2.valueOf(a.toLong).longValue == a.toLong
+  }
+
   property("a.intValue") = forAll { (a: Int) =>
     BigInt2.valueOf(a.toLong).intValue == a
   }
 
-  /*property("a.longValue") = forAll { (a: Long) =>
-    BigInt2.valueOf(a).longValue == a
-  }*/
+  property("a.longValue") = forAll { (a: Long) =>
+    BigInt2(a.toString).longValue == a
+  }
 
   property("a.signum") = forAll { (a: BigInt2) =>
     a.signum equals BigInt(a.toString).signum
