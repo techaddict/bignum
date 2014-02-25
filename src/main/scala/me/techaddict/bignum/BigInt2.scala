@@ -140,7 +140,7 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int]) extends Ordered[B
 
   def signum = sign
 
-  def -(a: BigInt2) = BigInt2.subtract(this, a)
+  def -(a: BigInt2) = this + (-a)
 
   def *(a: BigInt2) = BigInt2.multiply(this, a)
 
@@ -193,7 +193,7 @@ object BigInt2 {
   lazy val zero = BigInt2("0")
   lazy val one = BigInt2("1")
   lazy val ten = BigInt2("10")
-  lazy val SMALL_VALUES = Array[BigInt2](zero, one, BigInt2(1, 2), BigInt2(1, 3),
+  lazy val smallValues = Array[BigInt2](zero, one, BigInt2(1, 2), BigInt2(1, 3),
     BigInt2(1, 4), BigInt2(1, 5), BigInt2(1, 6), BigInt2(1, 7),
     BigInt2(1, 8), BigInt2(1, 9), ten )
 
@@ -238,7 +238,7 @@ object BigInt2 {
         minusOne
     }
     else if (a <= 10)
-      SMALL_VALUES(a.toInt)
+      smallValues(a.toInt)
     else
       BigInt2(1, a.toInt)
 
@@ -275,25 +275,15 @@ object BigInt2 {
     (a & 0xFFFFFFFFL) * (b & 0xFFFFFFFFL) + (c & 0xFFFFFFFFL) + (d & 0xFFFFFFFFL)
 
   private[bignum] def inplaceAdd(a: Array[Int], aSize: Int, addend: Int): Int = {
-    var carry = addend & 0xFFFFFFFFL
-    var i = 0
-    /*@tailrec def compute(pos: Int, carry: Long): Int = {
+    @tailrec def compute(pos: Int, carry: Long): Int = {
       if (pos < aSize && carry != 0) {
-        val tcarry = carry + a(pos) & 0xFFFFFFFFL
-        val prev = a(pos)
+        val tcarry = carry + (a(pos) & 0xFFFFFFFFL)
         a(pos) = tcarry.toInt
-        compute(pos + 1, carry >>> 32)
+        compute(pos + 1, tcarry >>> 32)
       }
       else carry.toInt
-    }*/
-    while (i < aSize && carry != 0){
-      carry += a(i) & 0xFFFFFFFFL
-      a(i) = carry.toInt
-      carry >>>= 32
-      i += 1
     }
-    carry.toInt
-    //compute(i, carry)
+    compute(0, addend & 0xFFFFFFFFL)
   }
 
   private[bignum] def compareArrays(a: Array[Int], b: Array[Int], size: Int): Int = {
@@ -321,10 +311,8 @@ object BigInt2 {
         val res = a1 + b1
         val valueLo = res.toInt
         val valueHi = (res >>> 32).toInt
-        return (
-          if (valueHi == 0) BigInt2(aSign, valueLo)
+        return if (valueHi == 0) BigInt2(aSign, valueLo)
           else BigInt2(aSign, Array[Int](valueLo, valueHi))
-        )
       }
       return BigInt2.valueOf(if (aSign < 0) b1 - a1 else a1 - b1)
     }
@@ -355,7 +343,8 @@ object BigInt2 {
     res
   }
 
-  private[this] def add(res: Array[Int], a: Array[Int], b: Array[Int]) {
+  private[this] def add(a: Array[Int], b: Array[Int]): Array[Int] = {
+    val res = new Array[Int](a.size + 1)
     var carry = (a(0) & 0xFFFFFFFFL) + (b(0) & 0xFFFFFFFFL)
     res(0) = carry.toInt
     @tailrec def compute(pos: Int, carry: Long) {
@@ -373,17 +362,8 @@ object BigInt2 {
         res(pos) = carry.toInt
     }
     compute(1, carry >> 32)
+    res
   }
-
-  private[this] def add(a: Array[Int], b: Array[Int]): Array[Int] = {
-    val res = new Array[Int](a.size + 1)
-    if (a.size >= b.size) add(res, a, b)
-    else add(res, b, a)
-    return res
-  }
-
-  private[bignum] def subtract(a: BigInt2, b: BigInt2): BigInt2 =
-    add(a, -b)
 
   private[this] def subtract(a: Array[Int], b: Array[Int]): Array[Int] = {
     val res = new Array[Int](a.size)
