@@ -1,21 +1,9 @@
 package me.techaddict.bignum
 
-import org.scalatest.FunSuite
-import org.scalatest.prop.Checkers
-import org.scalatest._
-import org.scalatest.Matchers
-
-import org.scalacheck.{Arbitrary, Gen}
-import org.scalacheck.Arbitrary._
-import org.scalacheck.Prop._
+import org.scalacheck.Prop.forAll
 import org.scalacheck.Properties
 
-import java.math.BigInteger
-
-object BigInt2Laws extends Properties("BigInt Law") {
-
-  implicit val arbBigInt2: Arbitrary[BigInt2] =
-    Arbitrary(arbitrary[BigInt].map(n => BigInt2(n.toString)))
+object BigInt2Laws extends Properties("BigInt Law") with Generators{
 
   property("a + b == b + a") = forAll { (a: BigInt2, b: BigInt2) =>
     (a + b) equals (b + a)
@@ -57,13 +45,12 @@ object BigInt2Laws extends Properties("BigInt Law") {
     (a + (b + c)) equals ((a + b) + c)
   }
 
-  // Below Test's should take care of divide by 0 :P
-  /*property("a / a == 1)") = forAll { (a: BigInt2) =>
+  property("a / a == 1)") = forAll { (a: NonZeroBigInt2) =>
     (a / a).toString == BigInt2.one.toString
   }
 
-  property("(a * b) / b = a") = forAll { (a: BigInt2, b: BigInt2) =>
+  property("(a * b) / b = a") = forAll { (a: BigInt2, b: NonZeroBigInt2) =>
     ((a * b) / b).toString == a.toString
-  }*/
+  }
 
 }

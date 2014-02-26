@@ -109,8 +109,10 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int]) extends Ordered[B
       val resSign = if (thisSign == divisorSign) 1 else -1
       if (divisorLen == 1)
         BigInt2.divideArrayByInt(resDigits, digits, divisor.digits(0))
-      else
+      else {
+        print("2")
         BigInt2.divide(resDigits, digits, divisor.digits)
+      }
       val res = BigInt2(resSign, resDigits)
       res.cutOffLeadingZeroes
       res

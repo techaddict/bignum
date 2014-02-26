@@ -1,21 +1,21 @@
 package me.techaddict.bignum
 
-import org.scalatest.FunSuite
-import org.scalatest.prop.Checkers
-import org.scalatest._
-import org.scalatest.Matchers
-
-import org.scalacheck.{Arbitrary, Gen}
-import org.scalacheck.Arbitrary._
-import org.scalacheck.Prop._
+import org.scalacheck.Prop.forAll
 import org.scalacheck.Properties
 
 import java.math.BigInteger
 
-object BigInt2OpsTest extends Properties("BigInt Op") {
+object BigInt2OpsTest extends Properties("BigInt Op") with Generators {
 
-  implicit val arbBigInt2: Arbitrary[BigInt2] =
-    Arbitrary(arbitrary[BigInt].map(n => BigInt2(n.toString)))
+  property("List[Op]") = forAll { (y0: BigInt, ops: List[Op]) =>
+    var x = BigInt2(y0.toString)
+    var y = y0
+    ops.forall { op =>
+      x = op(x)
+      y = op(y)
+      x equals y
+    }
+  }
 
   property("BigInt2(Int)") = forAll { (a: Int) =>
     BigInt2(a).intValue == a
@@ -37,10 +37,8 @@ object BigInt2OpsTest extends Properties("BigInt Op") {
     (a * b) equals (BigInt(a.toString) * BigInt(b.toString))
   }
 
-  property("a / b") = forAll { (a: BigInt2, b: BigInt2) =>
-    if (b equals BigInt2.zero == false)
-      (a / b) equals (BigInt(a.toString) / BigInt(b.toString))
-    else true
+  property("a / b") = forAll { (a: BigInt2, b: NonZeroBigInt2) =>
+    (a / b) equals (BigInt(a.toString) / BigInt(b.toString))
   }
 
   property("a.abs") = forAll { (a: BigInt2) =>
