@@ -8,7 +8,6 @@ Big Numbers Library Written purely in Scala
 ```scala
 BigInt2(str: String)
 BigInt2(str: String, radix: Int)
-BigInt2(sign: Int, value: Int)
 BigInt2(value: Int)
 BigInt2(value: Long)
 ```
