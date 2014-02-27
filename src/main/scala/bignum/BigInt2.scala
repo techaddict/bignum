@@ -209,7 +209,7 @@ object BigInt2 {
       ret
     }
 
-  @inline private[bignum] def valueOf(a: Long): BigInt2 =
+  private[bignum] def valueOf(a: Long): BigInt2 =
     if (a == Long.MinValue)
       BigInt2("-9223372036854775808")
     else if (a < 0)
@@ -221,7 +221,7 @@ object BigInt2 {
       else BigInt2(a.signum, Array[Int](Lo, Hi))
     }
 
-  @inline private[bignum] def valueOf(a: Int): BigInt2 =
+  private[bignum] def valueOf(a: Int): BigInt2 =
     if (a < 0) {
       if (a != -1) BigInt2(-1, -a)
       else minusOne
