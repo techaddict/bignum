@@ -3,6 +3,8 @@ package bignum
 import scala.annotation.tailrec
 
 class BigInt2 private[bignum](sign0: Int, digits0: Array[Int]) extends Ordered[BigInt2]{
+  if (sign0 < -1 || sign0 > 1)
+    throw new IllegalArgumentException(sign0 + "signum Should be either -1, +1, 0")
   private[bignum] var sign: Int = sign0
   private[bignum] var digits: Array[Int] = digits0
 
@@ -11,12 +13,8 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int]) extends Ordered[B
     this(0, Array(0))
     if (a1.length == 0)
       throw new NumberFormatException("Zero length BigInteger")
-    val a = removeLeadingZeroes(a1)
-    if (a == "") {
-      sign = 0
-      digits = Array(0)
-    }
-    else {
+    val a = a1.dropWhile(_ == '0')
+    if (a != "") {
       // Doesn't Handle +123
       val sign1 = if (a.size > 0 && a(0) == '-') -1 else 1
       val startChar = if (sign1 == -1) 1 else 0
@@ -66,16 +64,6 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int]) extends Ordered[B
     }
   }
 
-  private[this] def removeLeadingZeroes(s: String): String = {
-    def counter(pos: Int): Int = {
-      if (pos < s.size && s(pos) == '0')
-        counter(pos + 1)
-      else pos
-    }
-    val pos = counter(0)
-    s.drop(pos)
-  }
-
   def +(a: BigInt2) = BigInt2.add(this, a)
 
   def abs = if (sign < 0) -this else this
@@ -94,14 +82,12 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int]) extends Ordered[B
         (digits(0) & 0xFFFFFFFFL) / (divisor.digits(0) & 0xFFFFFFFFL)
       return BigInt2.valueOf(value)
     }
-    val cmp =
-      if (thisLen != divisorLen) {if (thisLen > divisorLen) 1 else -1}
-      else BigInt2.compareArrays(digits, divisor.digits)
+    val cmp = BigInt2.compareArrays(digits, divisor.digits)
     if (cmp == 0){
       if (thisSign == divisorSign) BigInt2.one
       else BigInt2.minusOne
     }
-    else if (cmp == -1)
+    else if (cmp < 0)
       BigInt2.zero
     else {
       val resLength = thisLen - divisorLen + 1
@@ -109,10 +95,8 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int]) extends Ordered[B
       val resSign = if (thisSign == divisorSign) 1 else -1
       if (divisorLen == 1)
         BigInt2.divideArrayByInt(resDigits, digits, divisor.digits(0))
-      else {
-        print("2")
+      else
         BigInt2.divide(resDigits, digits, divisor.digits)
-      }
       val res = BigInt2(resSign, resDigits)
       res.cutOffLeadingZeroes
       res
@@ -123,13 +107,10 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int]) extends Ordered[B
 
   def max(a: BigInt2): BigInt2 = if (this.compare(a) > 0) this else a
 
-  def compare(that: BigInt2): Int = {
+  def compare(that: BigInt2): Int =
     if (sign > that.sign) 1
     else if (sign < that.sign) -1
-    else if (digits.size > that.digits.size) sign
-    else if (digits.size < that.digits.size) -that.sign
     else sign * BigInt2.compareArrays(digits, that.digits)
-  }
 
   def intValue: Int = if (digits.length < 2) sign * digits(0) else -1
 
@@ -174,7 +155,7 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int]) extends Ordered[B
       (i < 0)
     }
 
-  private[bignum] def isOne = ((digits.size == 1) && (digits(0) == 1))
+  private[bignum] def isOne = this equals BigInt2.one
 
   override def equals(that: Any): Boolean = that match {
     case a: BigInt2 =>
@@ -228,12 +209,11 @@ object BigInt2 {
       ret
     }
 
-  private[bignum] def valueOf(a: Long): BigInt2 =
+  @inline private[bignum] def valueOf(a: Long): BigInt2 =
     if (a == Long.MinValue)
       BigInt2("-9223372036854775808")
-    else if (a < 0) {
+    else if (a < 0)
       -valueOf(-a)
-    }
     else {
       val Lo = a.toInt
       val Hi = (a >>> 32).toInt
@@ -241,12 +221,10 @@ object BigInt2 {
       else BigInt2(a.signum, Array[Int](Lo, Hi))
     }
 
-  private[bignum] def valueOf(a: Int): BigInt2 =
+  @inline private[bignum] def valueOf(a: Int): BigInt2 =
     if (a < 0) {
-      if (a != -1)
-        BigInt2(-1, -a)
-      else
-        minusOne
+      if (a != -1) BigInt2(-1, -a)
+      else minusOne
     }
     else if (a <= 10)
       smallValues(a)
@@ -298,15 +276,19 @@ object BigInt2 {
   }
 
   private[bignum] def compareArrays(a: Array[Int], b: Array[Int]): Int = {
-    @tailrec def rec(pos: Int): Int = {
-      if (pos >= 0 && a(pos) == b(pos))
-        rec(pos - 1)
-      else pos
+    if (a.size > b.size) 1
+    else if (a.size < b.size) -1
+    else {
+      @tailrec def rec(pos: Int): Int = {
+        if (pos >= 0 && a(pos) == b(pos))
+          rec(pos - 1)
+        else pos
+      }
+      val pos = rec(a.size - 1)
+      if (pos < 0) 0
+      else if ((a(pos) & 0xFFFFFFFFL) < (b(pos) & 0xFFFFFFFFL)) -1
+      else 1
     }
-    val pos = rec(a.size - 1)
-    if (pos < 0) 0
-    else if ((a(pos) & 0xFFFFFFFFL) < (b(pos) & 0xFFFFFFFFL)) -1
-    else 1
   }
 
   private[bignum] def add(a: BigInt2, b: BigInt2): BigInt2 = {
@@ -331,13 +313,10 @@ object BigInt2 {
         else add(b.digits, a.digits)
     }
     else {
-      val cmp =
-        if (aLen > bLen) 1
-        else if (aLen < bLen) -1
-        else compareArrays(a.digits, b.digits)
+      val cmp = compareArrays(a.digits, b.digits)
       if (cmp == 0)
         return zero
-      else if (cmp == 1) {
+      else if (cmp > 0) {
         resSign = aSign
         resDigits = subtract(a.digits, b.digits)
       }

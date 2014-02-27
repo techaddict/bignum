@@ -3,8 +3,6 @@ package bignum
 import org.scalacheck.Prop.forAll
 import org.scalacheck.Properties
 
-import java.math.BigInteger
-
 object BigInt2OpsTest extends Properties("BigInt Op") with Generators {
 
   property("List[Op]") = forAll { (y0: BigInt, ops: List[Op]) =>
@@ -15,14 +13,6 @@ object BigInt2OpsTest extends Properties("BigInt Op") with Generators {
       y = op(y)
       x equals y
     }
-  }
-
-  property("BigInt2(Int)") = forAll { (a: Int) =>
-    BigInt2(a).intValue == a
-  }
-
-  property("BigInt2(Long)") = forAll { (a: Long) =>
-    BigInt2(a).longValue == a
   }
 
   property("a + b") = forAll { (a: BigInt2, b: BigInt2) =>
