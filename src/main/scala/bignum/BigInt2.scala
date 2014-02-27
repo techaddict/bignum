@@ -1,4 +1,4 @@
-package me.techaddict.bignum
+package bignum
 
 import scala.annotation.tailrec
 

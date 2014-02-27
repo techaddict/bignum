@@ -1,4 +1,4 @@
-package me.techaddict.bignum
+package bignum
 
 sealed trait Op {
   def apply(a: BigInt2): BigInt2

@@ -1,4 +1,4 @@
-package me.techaddict.bignum
+package bignum
 
 import org.scalacheck.Prop.forAll
 import org.scalacheck.Properties
@@ -37,9 +37,9 @@ object BigInt2OpsTest extends Properties("BigInt Op") with Generators {
     (a * b) equals (BigInt(a.toString) * BigInt(b.toString))
   }
 
-  property("a / b") = forAll { (a: BigInt2, b: NonZeroBigInt2) =>
+  /*property("a / b") = forAll { (a: BigInt2, b: NonZeroBigInt2) =>
     (a / b) equals (BigInt(a.toString) / BigInt(b.toString))
-  }
+  }*/
 
   property("a.abs") = forAll { (a: BigInt2) =>
     a.abs equals BigInt(a.toString).abs

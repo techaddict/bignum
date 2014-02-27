@@ -1,4 +1,4 @@
-package me.techaddict.bignum
+package bignum
 
 import org.scalacheck.Prop.forAll
 import org.scalacheck.Properties

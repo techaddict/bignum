@@ -1,4 +1,4 @@
-package me.techaddict.bignum
+package bignum
 
 import org.scalacheck.{Arbitrary, Gen}
 import org.scalacheck.Gen.{oneOf, listOf}
