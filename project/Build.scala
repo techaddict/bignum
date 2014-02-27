@@ -35,7 +35,11 @@ object MyBuild extends Build {
     name := "bignum",
     libraryDependencies ++= Seq(
       scalaCheck % "test"
-    )
+    ),
+    initialCommands in console := """
+    import bignum.BigInt2
+    import bignum.BigInt2._
+    """
   )
 
   // Benchmark
