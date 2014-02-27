@@ -1,6 +1,7 @@
 language: scala
 script:
   - sh runtests.sh
+  - sbt 'project benchmark' test
 scala:
   - 2.10.3
   - 2.10.4-RC3
@@ -8,5 +9,4 @@ scala:
 jdk:
   - oraclejdk7
   - openjdk7
-  - openjdk6
   - oraclejdk8
