@@ -43,18 +43,32 @@ object MyBuild extends Build {
   )
 
   // Benchmark
-  lazy val benchmarks = Project("benchmark", file("benchmark")).
-    settings(bechmarkSettings: _*).
+  lazy val benchmark: Project = Project("benchmark", file("benchmark")).
+    settings(benchmarkSettings: _*).
     dependsOn(core)
 
-  lazy val bechmarkSettings = Seq(
+  lazy val key = AttributeKey[Boolean]("javaOptionsPatched")
+
+  lazy val benchmarkSettings = Seq(
     name := "bignum-benchmark",
     libraryDependencies ++= Seq(
-      scalaMeter % "test"
+      "com.google.guava" % "guava" % "r09",
+      "com.google.code.java-allocation-instrumenter" % "java-allocation-instrumenter" % "2.0",
+      "com.google.code.caliper" % "caliper" % "1.0-SNAPSHOT" from "http://plastic-idolatry.com/jars/caliper-1.0-SNAPSHOT.jar",
+      "com.google.code.gson" % "gson" % "1.7.1"
     ),
-    testFrameworks += new TestFramework("org.scalameter.ScalaMeterFramework"),
-    logBuffered := false,
-    parallelExecution in Test := false
+    fork in run := true,
+    onLoad in Global ~= { previous => state =>
+      previous {
+        state.get(key) match {
+          case None =>
+            val classPath = Project.runTask(fullClasspath in Runtime in benchmark, state).get._2.toEither.right.get.files.mkString(":")
+            Project.extract(state).append(Seq(javaOptions in (benchmark, run) ++= Seq("-cp", classPath)), state.put(key, true))
+          case Some(_) =>
+            state
+        }
+      }
+    }
   )
 
 }
