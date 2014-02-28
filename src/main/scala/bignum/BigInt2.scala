@@ -99,9 +99,9 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
       else{
         val resDigits =
           if (cmp > 0)
-            BigInt2.subtract(this.digits, that.digits)
+            arrayMinusArray(this.digits, that.digits)
           else
-            BigInt2.subtract(that.digits, this.digits)
+            arrayMinusArray(that.digits, this.digits)
         val resSign =
           if (cmp == this.signum) 1
           else -1
@@ -358,24 +358,6 @@ object BigInt2 {
       else carry.toInt
     }
     compute(0, addend & 0xFFFFFFFFL)
-  }
-
-  private[bignum] def subtract(a: Array[Int], b: Array[Int]): Array[Int] = {
-    val res = new Array[Int](a.size)
-    @tailrec def compute(pos: Int, borrow: Long) {
-      if (pos < b.size) {
-        val tborrow = borrow + (a(pos) & 0xFFFFFFFFL) - (b(pos) & 0xFFFFFFFFL)
-        res(pos) = tborrow.toInt
-        compute(pos + 1, tborrow >> 32)
-      }
-      else if (pos < a.size) {
-        val tborrow = borrow + (a(pos) & 0xFFFFFFFFL)
-        res(pos) = tborrow.toInt
-        compute(pos + 1, tborrow >> 32)
-      }
-    }
-    compute(0, 0L)
-    return res
   }
 
   private[bignum] def multiply(a: BigInt2, b: BigInt2): BigInt2 = {

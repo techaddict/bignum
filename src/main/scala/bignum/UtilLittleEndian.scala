@@ -44,5 +44,23 @@ object UtilLittleEndian {
     compute(1, carry >> 32)
     res
   }
+  /** Callers of this method have to make sure that the size of `large` is equal or greater than `small`. */
+  final def arrayMinusArray(large: Array[Int], small: Array[Int]): Array[Int] = {
+    val res = new Array[Int](large.size)
+    @tailrec def compute(pos: Int, borrow: Long) {
+      if (pos < small.size) {
+        val tborrow = borrow + large(pos).unsignedToLong - small(pos).unsignedToLong
+        res(pos) = tborrow.toInt
+        compute(pos + 1, tborrow >> 32)
+      }
+      else if (pos < large.size) {
+        val tborrow = borrow + large(pos).unsignedToLong
+        res(pos) = tborrow.toInt
+        compute(pos + 1, tborrow >> 32)
+      }
+    }
+    compute(0, 0L)
+    res
+  }
 
 }
