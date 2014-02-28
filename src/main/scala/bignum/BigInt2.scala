@@ -58,10 +58,10 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
     /* Check if one of the numbers are zero and return the other one.
      * `that` needs to be checked first, so that a NPE gets thrown if it is null. */
     if (this.isZero) return that
-    if (that.isZero) return this
+    else if (that.isZero) return this
     // Check if both numbers have the same sign.
     // If true, keep the sign and add the numbers.
-    if (this.signum == that.signum) {
+    else if (this.signum == that.signum) {
       val resDigits =
         if (this.digits.length >= that.digits.length)
           arrayPlusArray(this.digits, that.digits)
@@ -149,9 +149,43 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
 
   def signum = sign
 
-  def -(a: BigInt2) = this + (-a)
+  def -(that: BigInt2): BigInt2 = {
+    // If that is zero, return this.
+    if (that.signum == 0) this
+    // If this is Zero, return that, negated.
+    else if (this.signum == 0) -that
+    // Invariant: Both numbers are non-zero.
+    // Different Signs
+    else if (this.signum != that.signum) {
+      val resultArr =
+        if (this.digits.length >= that.digits.length)
+          arrayPlusArray(this.digits, that.digits)
+        else
+          arrayPlusArray(that.digits, this.digits)
+      new BigInt2(this.signum, removeLeadingZeroes(resultArr))
+    }
+    // Same signs.
+    // Compare arrays:
+    else {
+      val result = compareArrays(this.digits, that.digits)
+      if (result != 0) {
+        val resArr =
+          if (result > 0)
+            arrayMinusArray(this.digits, that.digits)
+          else
+            arrayMinusArray(that.digits, this.digits)
+        val resSign =
+          if (result == this.signum) 1
+          else -1
+        new BigInt2(resSign, removeLeadingZeroes(resArr))
+      }
+      // Same value, Same sign:
+      else BigInt2.zero
+    }
+  }
+
   def *(a: BigInt2) = BigInt2.multiply(this, a)
-  def unary_- : BigInt2 = if (sign == 0) this else BigInt2(-sign, digits)
+  def unary_- : BigInt2 = BigInt2(-sign, digits)
 
   def <<(n: Int): BigInt2 =
     if ((n == 0) || (sign == 0))
@@ -188,6 +222,8 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
       toString == b.toString
     case _ => false
   }
+
+  val mag = digits
 
   override def toString = BigInt2.toDecimalScaledString(this, 0)
 
