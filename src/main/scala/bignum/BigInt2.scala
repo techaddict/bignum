@@ -3,6 +3,8 @@ package bignum
 import scala.annotation.tailrec
 import scala.math.{ ScalaNumber, ScalaNumericConversions }
 
+import UtilCommon._
+
 @SerialVersionUID(1L)
 class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
   extends ScalaNumber with ScalaNumericConversions with Ordered[BigInt2]
@@ -85,7 +87,7 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
     if (thisLen + divisorLen == 2) {
       val value = (if (thisSign != divisorSign) -1 else 1) *
         (digits(0) & 0xFFFFFFFFL) / (divisor.digits(0) & 0xFFFFFFFFL)
-      return BigInt2.valueOf(value)
+      return BigInt2(value)
     }
     val cmp = BigInt2.compareArrays(digits, divisor.digits)
     if (cmp == 0){
@@ -200,8 +202,65 @@ object BigInt2 {
   def apply(a: String, radix: Int) = new BigInt2(a, radix)
   private[bignum] def apply(sign: Int, value: Int) = new BigInt2(sign, Array(value))
   private[bignum] def apply(sign: Int, value: Array[Int]) = new BigInt2(sign, value)
-  def apply(a: Int) = valueOf(a)
-  def apply(a: Long) = valueOf(a)
+  /**
+    * Creates an instance with the value of the given signed `Int` value.
+    *
+    * @param num the signed value from which the BigInt is created
+    */
+  def apply(num: Int): BigInt2 = {
+    if (num == 0) return BigInt2.zero
+    // Invariant: `num` not Zero
+    var newNum = 0
+    var newSign = 0
+
+    if (num < 0) {
+      // Make num positive again ...
+      newNum = -num
+      // and make the sign negative.
+      newSign = -1
+    } else {
+      newNum = num
+      newSign = 1
+    }
+
+    assume(newSign != 0)
+    assume(newNum != 0)
+
+    new BigInt2(newSign, Array(newNum))
+  }
+  /**
+    * Creates an instance with the value of the given signed `Long` value.
+    *
+    * @param num the signed value from which the BigInt is created
+    */
+  def apply(num: Long): BigInt2 = {
+    if (num == 0) return BigInt2.zero
+    // Invariant: `num` not Zero
+    var newNum = 0L
+    var newSign = 0
+
+    if (num < 0) {
+      // Make num positive again ...
+      newNum = -num
+      // and make the sign negative.
+      newSign = -1
+    } else {
+      newNum = num
+      newSign = 1
+    }
+
+    assume(newSign != 0)
+    assume(newNum != 0)
+
+    // Get the upper 32 bits to figure out how large the array needs to be
+    val upperInt: Int = highBitsToInt(newNum)
+    if (upperInt != 0)
+      // We need an array with 2 elements
+      new BigInt2(newSign, Array(newNum.toInt, upperInt))
+    else
+      // We need an array with 1 element
+      new BigInt2(newSign, Array(newNum.toInt))
+  }
 
   def random(num: Int, rnd: java.util.Random) =
     if (num < 0)
@@ -217,28 +276,6 @@ object BigInt2 {
       ret.cutOffLeadingZeroes
       ret
     }
-
-  private[bignum] def valueOf(a: Long): BigInt2 =
-    if (a == Long.MinValue)
-      BigInt2("-9223372036854775808")
-    else if (a < 0)
-      -valueOf(-a)
-    else {
-      val Lo = a.toInt
-      val Hi = (a >>> 32).toInt
-      if (Hi == 0) BigInt2(a.signum, Lo)
-      else BigInt2(a.signum, Array[Int](Lo, Hi))
-    }
-
-  private[bignum] def valueOf(a: Int): BigInt2 =
-    if (a < 0) {
-      if (a != -1) BigInt2(-1, -a)
-      else minusOne
-    }
-    else if (a <= 10)
-      smallValues(a)
-    else
-      BigInt2(1, a)
 
   private[bignum] def toDecimalScaledString(bi: BigInt2, scale: Int): String = {
     var digits = bi.digits
@@ -312,8 +349,8 @@ object BigInt2 {
     if (aLen + bLen == 2) {
       val a1 = a.digits(0) & 0xFFFFFFFFL
       val b1 = b.digits(0) & 0xFFFFFFFFL
-      if (aSign == bSign) return BigInt2.valueOf(aSign * (a1 + b1))
-      else return BigInt2.valueOf(if (aSign < 0) b1 - a1 else a1 - b1)
+      if (aSign == bSign) return BigInt2(aSign * (a1 + b1))
+      else return BigInt2(if (aSign < 0) b1 - a1 else a1 - b1)
     }
     else if (aSign == bSign) {
       resSign = aSign
@@ -387,7 +424,7 @@ object BigInt2 {
       else 1
     if (resLength == 2) {
       val value = unsignedMultAddAdd(a.digits(0), b.digits(0), 0, 0)
-      BigInt2.valueOf(resSign * value)
+      BigInt2(resSign * value)
     }
     else {
       val resDigits = new Array[Int](resLength)

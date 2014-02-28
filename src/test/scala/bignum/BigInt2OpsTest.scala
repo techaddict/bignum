@@ -48,11 +48,11 @@ object BigInt2OpsTest extends Properties("BigInt Op") with Generators {
   }
 
   property("a.intValue") = forAll { (a: Int) =>
-    BigInt2.valueOf(a).intValue == a
+    BigInt2(a).intValue == a
   }
 
   property("a.longValue") = forAll { (a: Long) =>
-    BigInt2.valueOf(a).longValue == a
+    BigInt2(a).longValue == a
   }
 
   property("a.signum") = forAll { (a: BigInt2) =>
