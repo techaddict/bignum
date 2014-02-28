@@ -50,25 +50,7 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
       val substrEnd = startChar + (if (topChars == 0) charsPerInt else topChars)
       init(0, startChar, substrEnd)
       sign = sign1
-      digits = digits1
-      cutOffLeadingZeroes
-    }
-  }
-
-  private[bignum] def cutOffLeadingZeroes {
-    // should be replaced by dropWhile
-    def counter(pos: Int): Int = {
-      if (pos >= 0 && digits(pos) == 0)
-        counter(pos - 1)
-      else pos
-    }
-    val pos = counter(digits.size - 1)
-    // Check if pos != digits last elem
-    if (pos != digits.size - 1) {
-      digits = digits.dropRight(digits.size - pos - 1)
-      // If all are zero only then digits = Array(0) and sign
-      if (digits.size == 0)
-        digits = Array(0)
+      digits = removeLeadingZeroes(digits1)
     }
   }
 
@@ -85,18 +67,13 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
           arrayPlusArray(this.digits, that.digits)
         else
           arrayPlusArray(that.digits, this.digits)
-      val res = new BigInt2(this.signum, resDigits)
-      res.cutOffLeadingZeroes
-      res
+      new BigInt2(this.signum, removeLeadingZeroes(resDigits))
     }
     // Different signs.
     else {
       // Compare arrays:
       val cmp = compareArrays(this.digits, that.digits)
-      if (cmp == 0)
-        // Same value, different sign:
-        return BigInt2.zero
-      else{
+      if (cmp != 0){
         val resDigits =
           if (cmp > 0)
             arrayMinusArray(this.digits, that.digits)
@@ -105,10 +82,10 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
         val resSign =
           if (cmp == this.signum) 1
           else -1
-        val res = new BigInt2(resSign, resDigits)
-        res.cutOffLeadingZeroes
-        res
+        BigInt2(resSign, removeLeadingZeroes(resDigits))
       }
+      // Same value, different sign:
+      else BigInt2.zero
     }
   }
 
@@ -143,9 +120,7 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
         BigInt2.divideArrayByInt(resDigits, digits, divisor.digits(0))
       else
         BigInt2.divide(resDigits, digits, divisor.digits)
-      val res = BigInt2(resSign, resDigits)
-      res.cutOffLeadingZeroes
-      res
+      BigInt2(resSign, removeLeadingZeroes(resDigits))
     }
   }
 
@@ -170,13 +145,12 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
   def floatValue = ???
 
   def isWhole = true
-  def underlying(): Object = this
+  def underlying = this
+
   def signum = sign
 
   def -(a: BigInt2) = this + (-a)
-
   def *(a: BigInt2) = BigInt2.multiply(this, a)
-
   def unary_- : BigInt2 = if (sign == 0) this else BigInt2(-sign, digits)
 
   def <<(n: Int): BigInt2 =
@@ -311,9 +285,7 @@ object BigInt2 {
       for (i <- 0 until digits.size)
         digits(i) = rnd.nextInt()
       digits(digits.size - 1) >>>= (-num) & 31
-      val ret = BigInt2(1, digits)
-      ret.cutOffLeadingZeroes
-      ret
+      BigInt2(1, removeLeadingZeroes(digits))
     }
 
   private[bignum] def toDecimalScaledString(bi: BigInt2, scale: Int): String = {
@@ -373,9 +345,7 @@ object BigInt2 {
     else {
       val resDigits = new Array[Int](resLength)
       multArraysInplace(a.digits, b.digits, resDigits)
-      val result = BigInt2(resSign, resDigits)
-      result.cutOffLeadingZeroes
-      result
+      BigInt2(resSign, removeLeadingZeroes(resDigits))
     }
   }
 
@@ -449,9 +419,7 @@ object BigInt2 {
           res(i) += 1
         }
       }
-      val result = BigInt2(source.sign, res)
-      result.cutOffLeadingZeroes
-      result
+      BigInt2(source.sign, removeLeadingZeroes(res))
     }
   }
 
@@ -492,9 +460,7 @@ object BigInt2 {
     val resLength = source.digits.size + intCount + (if (count1 == 0) 0 else 1)
     val res = new Array[Int](resLength)
     shiftLeft(res, source.digits, intCount, count1)
-    val result = BigInt2(source.sign, res)
-    result.cutOffLeadingZeroes
-    return result
+    BigInt2(source.sign, removeLeadingZeroes(res))
   }
 
   private[bignum] def shiftLeft(res: Array[Int], source: Array[Int], intCount: Int, count: Int) {
