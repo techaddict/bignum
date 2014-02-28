@@ -435,7 +435,7 @@ object BigInt2 {
         true
     }
     if (count == 0) {
-      System.arraycopy(source, intCount, res, 0, resLen)
+      scala.compat.Platform.arraycopy(source, intCount, res, 0, resLen)
       compute(0)
     }
     else {
@@ -465,7 +465,7 @@ object BigInt2 {
 
   private[bignum] def shiftLeft(res: Array[Int], source: Array[Int], intCount: Int, count: Int) {
     if (count == 0)
-      System.arraycopy(source, 0, res, intCount, res.size - intCount)
+      scala.compat.Platform.arraycopy(source, 0, res, intCount, res.size - intCount)
     else {
       val rightShiftCount = 32 - count
       val start = res.size - 1
@@ -533,8 +533,8 @@ object BigInt2 {
       BigInt2.shiftLeft(normA, a, 0, divisorShift)
     }
     else {
-      System.arraycopy(a, 0, normA, 0, aLen)
-      System.arraycopy(b, 0, normB, 0, bLen)
+      scala.compat.Platform.arraycopy(a, 0, normA, 0, aLen)
+      scala.compat.Platform.arraycopy(b, 0, normB, 0, bLen)
     }
     val firstDivisorDigit = normB(bLen - 1)
     var i = quot.size -1
@@ -591,7 +591,7 @@ object BigInt2 {
       normB
     }
     else {
-      System.arraycopy(normA, 0, normB, 0, bLen)
+      scala.compat.Platform.arraycopy(normA, 0, normB, 0, bLen)
       normA
     }
   }
