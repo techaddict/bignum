@@ -71,7 +71,45 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
     }
   }
 
-  def +(a: BigInt2) = BigInt2.add(this, a)
+  def +(that: BigInt2): BigInt2 = {
+    /* Check if one of the numbers are zero and return the other one.
+     * `that` needs to be checked first, so that a NPE gets thrown if it is null. */
+    if (this.isZero) return that
+    if (that.isZero) return this
+    // Check if both numbers have the same sign.
+    // If true, keep the sign and add the numbers.
+    if (this.signum == that.signum) {
+      val resDigits =
+        if (this.digits.length >= that.digits.length)
+          BigInt2.add(this.digits, that.digits)
+        else
+          BigInt2.add(that.digits, this.digits)
+      val res = new BigInt2(this.signum, resDigits)
+      res.cutOffLeadingZeroes
+      res
+    }
+    // Different signs.
+    else {
+      // Compare arrays:
+      val cmp = BigInt2.compareArrays(this.digits, that.digits)
+      if (cmp == 0)
+        // Same value, different sign:
+        return BigInt2.zero
+      else{
+        val resDigits =
+          if (cmp > 0)
+            BigInt2.subtract(this.digits, that.digits)
+          else
+            BigInt2.subtract(that.digits, this.digits)
+        val resSign =
+          if (cmp == this.signum) 1
+          else -1
+        val res = new BigInt2(resSign, resDigits)
+        res.cutOffLeadingZeroes
+        res
+      }
+    }
+  }
 
   def abs = if (sign < 0) -this else this
 
@@ -337,46 +375,7 @@ object BigInt2 {
     }
   }
 
-  private[bignum] def add(a: BigInt2, b: BigInt2): BigInt2 = {
-    val aSign = a.sign
-    val bSign = b.sign
-    var resSign = 0
-    var resDigits = Array[Int]()
-    if (aSign == 0) return b
-    if (bSign == 0) return a
-    val aLen = a.digits.size
-    val bLen = b.digits.size
-    if (aLen + bLen == 2) {
-      val a1 = a.digits(0) & 0xFFFFFFFFL
-      val b1 = b.digits(0) & 0xFFFFFFFFL
-      if (aSign == bSign) return BigInt2(aSign * (a1 + b1))
-      else return BigInt2(if (aSign < 0) b1 - a1 else a1 - b1)
-    }
-    else if (aSign == bSign) {
-      resSign = aSign
-      resDigits =
-        if (aLen >= bLen) add(a.digits, b.digits)
-        else add(b.digits, a.digits)
-    }
-    else {
-      val cmp = compareArrays(a.digits, b.digits)
-      if (cmp == 0)
-        return zero
-      else if (cmp > 0) {
-        resSign = aSign
-        resDigits = subtract(a.digits, b.digits)
-      }
-      else {
-        resSign = bSign
-        resDigits = subtract(b.digits, a.digits)
-      }
-    }
-    var res = BigInt2(resSign, resDigits)
-    res.cutOffLeadingZeroes
-    res
-  }
-
-  private[this] def add(a: Array[Int], b: Array[Int]): Array[Int] = {
+  private[bignum] def add(a: Array[Int], b: Array[Int]): Array[Int] = {
     val res = new Array[Int](a.size + 1)
     var carry = (a(0) & 0xFFFFFFFFL) + (b(0) & 0xFFFFFFFFL)
     res(0) = carry.toInt
@@ -398,7 +397,7 @@ object BigInt2 {
     res
   }
 
-  private[this] def subtract(a: Array[Int], b: Array[Int]): Array[Int] = {
+  private[bignum] def subtract(a: Array[Int], b: Array[Int]): Array[Int] = {
     val res = new Array[Int](a.size)
     @tailrec def compute(pos: Int, borrow: Long) {
       if (pos < b.size) {
