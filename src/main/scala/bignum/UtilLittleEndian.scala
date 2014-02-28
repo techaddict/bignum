@@ -86,4 +86,59 @@ object UtilLittleEndian {
     res
   }
 
+  final def inplaceAdd(a: Array[Int], aSize: Int, addend: Int): Int = {
+    @tailrec def compute(pos: Int, carry: Long): Int = {
+      if (pos < aSize && carry != 0) {
+        val tcarry = carry + (a(pos) & 0xFFFFFFFFL)
+        a(pos) = tcarry.toInt
+        compute(pos + 1, tcarry >>> 32)
+      }
+      else carry.toInt
+    }
+    compute(0, addend & 0xFFFFFFFFL)
+  }
+
+  final def inplaceMultArrays(a: Array[Int], b: Array[Int], res: Array[Int]) {
+    val aLen = a.size
+    val bLen = b.size
+    if (!(aLen == 0 || bLen == 0))
+      if (aLen == 1) res(bLen) = multiplyByInt(res, b, bLen, a(0))
+      else if (bLen == 1) res(aLen) = multiplyByInt(res, a, aLen, b(0))
+      else {
+        @tailrec def loop(pos: Int) {
+          if (pos < a.size) {
+            @tailrec def loopj(posj: Int, carry: Long): Int = {
+              if (posj < b.size) {
+                var tcarry = unsignedMultAddAdd(a(pos), b(posj), res(pos + posj), carry.toInt)
+                res(pos + posj) = tcarry.toInt
+                loopj(posj + 1, tcarry >>> 32)
+              }
+              else carry.toInt
+            }
+            res(pos + b.size) = loopj(0, 0L)
+            loop(pos + 1)
+          }
+        }
+        loop(0)
+      }
+  }
+
+  final def multiplyByInt(a: Array[Int], aSize: Int, factor: Int): Int =
+    multiplyByInt(a, a, aSize, factor)
+
+  final def multiplyByInt(res: Array[Int], a: Array[Int], aSize: Int, factor: Int): Int = {
+    @tailrec def compute(pos: Int, carry: Long): Int = {
+      if (pos < aSize) {
+        val tcarry = unsignedMultAddAdd(a(pos), factor, carry.toInt, 0)
+        res(pos) = tcarry.toInt
+        compute(pos + 1, tcarry >>> 32)
+      }
+      else carry.toInt
+    }
+    compute(0, 0L)
+  }
+
+  @inline final def unsignedMultAddAdd(a: Int, b: Int, c: Int, d: Int): Long =
+    (a & 0xFFFFFFFFL) * (b & 0xFFFFFFFFL) + (c & 0xFFFFFFFFL) + (d & 0xFFFFFFFFL)
+
 }

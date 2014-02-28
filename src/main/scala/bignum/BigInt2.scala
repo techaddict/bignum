@@ -40,8 +40,8 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
           if (bigRadixDigit < 0)
             throw new NumberFormatException("Illegal Digit")
           // digits * bigRadix + bigRadixDigit
-          val newDigit = BigInt2.multiplyByInt(digits1, ind, bigRadix)
-          digits1(ind) = newDigit + BigInt2.inplaceAdd(digits1, ind, bigRadixDigit)
+          val newDigit = multiplyByInt(digits1, ind, bigRadix)
+          digits1(ind) = newDigit + inplaceAdd(digits1, ind, bigRadixDigit)
           init(ind + 1, substrEnd, substrEnd + charsPerInt)
         }
         else
@@ -302,36 +302,6 @@ object BigInt2 {
     else ret
   }
 
-  private[bignum] def multiplyByInt(a: Array[Int], aSize: Int, factor: Int): Int =
-    multiplyByInt(a, a, aSize, factor)
-
-  private[this] def multiplyByInt(res: Array[Int], a: Array[Int], aSize: Int, factor: Int): Int = {
-    @tailrec def compute(pos: Int, carry: Long): Int = {
-      if (pos < aSize) {
-        val tcarry = unsignedMultAddAdd(a(pos), factor, carry.toInt, 0)
-        res(pos) = tcarry.toInt
-        compute(pos + 1, tcarry >>> 32)
-      }
-      else carry.toInt
-    }
-    compute(0, 0L)
-  }
-
-  private[bignum] def unsignedMultAddAdd(a: Int, b: Int, c: Int, d: Int): Long =
-    (a & 0xFFFFFFFFL) * (b & 0xFFFFFFFFL) + (c & 0xFFFFFFFFL) + (d & 0xFFFFFFFFL)
-
-  private[bignum] def inplaceAdd(a: Array[Int], aSize: Int, addend: Int): Int = {
-    @tailrec def compute(pos: Int, carry: Long): Int = {
-      if (pos < aSize && carry != 0) {
-        val tcarry = carry + (a(pos) & 0xFFFFFFFFL)
-        a(pos) = tcarry.toInt
-        compute(pos + 1, tcarry >>> 32)
-      }
-      else carry.toInt
-    }
-    compute(0, addend & 0xFFFFFFFFL)
-  }
-
   private[bignum] def multiply(a: BigInt2, b: BigInt2): BigInt2 = {
     val resLength = a.digits.size + b.digits.size
     val resSign =
@@ -344,36 +314,9 @@ object BigInt2 {
     }
     else {
       val resDigits = new Array[Int](resLength)
-      multArraysInplace(a.digits, b.digits, resDigits)
+      inplaceMultArrays(a.digits, b.digits, resDigits)
       BigInt2(resSign, removeLeadingZeroes(resDigits))
     }
-  }
-
-  private[this] def multArraysInplace(a: Array[Int], b: Array[Int], res: Array[Int]) {
-    val aLen = a.size
-    val bLen = b.size
-    if (!(aLen == 0 || bLen == 0))
-      if (aLen == 1) res(bLen) = multiplyByInt(res, b, bLen, a(0))
-      else if (bLen == 1) res(aLen) = multiplyByInt(res, a, aLen, b(0))
-      else multInplace(a, b, res)
-  }
-
-  private[this] def multInplace(a: Array[Int], b: Array[Int], t: Array[Int]) {
-    @tailrec def loop(pos: Int) {
-      if (pos < a.size) {
-        @tailrec def loopj(posj: Int, carry: Long): Int = {
-          if (posj < b.size) {
-            var tcarry = unsignedMultAddAdd(a(pos), b(posj), t(pos + posj), carry.toInt)
-            t(pos + posj) = tcarry.toInt
-            loopj(posj + 1, tcarry >>> 32)
-          }
-          else carry.toInt
-        }
-        t(pos + b.size) = loopj(0, 0L)
-        loop(pos + 1)
-      }
-    }
-    loop(0)
   }
 
   private[this] def shiftLeftOnce(result: Array[Int], source: Array[Int], srcLen: Int) {
