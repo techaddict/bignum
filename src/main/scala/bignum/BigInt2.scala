@@ -194,13 +194,9 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
 }
 
 object BigInt2 {
-  lazy val minusOne = BigInt2("-1")
-  lazy val zero = BigInt2("0")
-  lazy val one = BigInt2("1")
-  lazy val ten = BigInt2("10")
-  lazy val smallValues = Array[BigInt2](zero, one, BigInt2(1, 2), BigInt2(1, 3),
-    BigInt2(1, 4), BigInt2(1, 5), BigInt2(1, 6), BigInt2(1, 7),
-    BigInt2(1, 8), BigInt2(1, 9), ten )
+  final val minusOne = new BigInt2(-1, Array(1))
+  final val zero = new BigInt2(0, Array(0))
+  final val one = new BigInt2(1, Array(1))
 
   lazy val digitFitInInt = Array(-1, -1, 30, 19, 15, 13, 11, 11, 10, 9, 9, 8, 8, 8, 8, 7, 7,
     7, 7, 7, 7, 7, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 5)
