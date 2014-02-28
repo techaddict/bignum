@@ -2,9 +2,9 @@ package bignum
 
 import com.google.caliper.Param
 
-class BenchmarkAdd extends SimpleScalaBenchmark {
+class Multiply extends SimpleScalaBenchmark {
 
-  @Param(Array("100", "200", "500", "1000", "50000", "100000", "150000"))
+  @Param(Array("32", "64", "200", "500", "1000", "5000", "10000", "50000"))
   val length: Int = 0
 
   var bigint = BigInt("0")
@@ -23,7 +23,7 @@ class BenchmarkAdd extends SimpleScalaBenchmark {
     var result = bigint
     var i = 0
     while (i < 5) {
-      result = result + result
+      result = result * result
       i = i + 1
     }
     result
@@ -33,7 +33,7 @@ class BenchmarkAdd extends SimpleScalaBenchmark {
     var result = bigint2
     var i = 0
     while (i < 5) {
-      result = result + result
+      result = result * result
       i = i + 1
     }
     result
@@ -43,7 +43,7 @@ class BenchmarkAdd extends SimpleScalaBenchmark {
     var result = biginteger
     var i = 0
     while (i < 5) {
-      result = result.add(result)
+      result = result.multiply(result)
       i = i + 1
     }
     result
