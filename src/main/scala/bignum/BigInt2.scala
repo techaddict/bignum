@@ -4,6 +4,7 @@ import scala.annotation.tailrec
 import scala.math.{ ScalaNumber, ScalaNumericConversions }
 
 import UtilCommon._
+import UtilLittleEndian._
 
 @SerialVersionUID(1L)
 class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
@@ -91,7 +92,7 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
     // Different signs.
     else {
       // Compare arrays:
-      val cmp = BigInt2.compareArrays(this.digits, that.digits)
+      val cmp = compareArrays(this.digits, that.digits)
       if (cmp == 0)
         // Same value, different sign:
         return BigInt2.zero
@@ -127,7 +128,7 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
         (digits(0) & 0xFFFFFFFFL) / (divisor.digits(0) & 0xFFFFFFFFL)
       return BigInt2(value)
     }
-    val cmp = BigInt2.compareArrays(digits, divisor.digits)
+    val cmp = compareArrays(digits, divisor.digits)
     if (cmp == 0){
       if (thisSign == divisorSign) BigInt2.one
       else BigInt2.minusOne
@@ -155,7 +156,7 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
   def compare(that: BigInt2): Int =
     if (sign > that.sign) 1
     else if (sign < that.sign) -1
-    else sign * BigInt2.compareArrays(digits, that.digits)
+    else sign * compareArrays(digits, that.digits)
 
   def intValue: Int = if (digits.length < 2) sign * digits(0) else -1
 
@@ -357,22 +358,6 @@ object BigInt2 {
       else carry.toInt
     }
     compute(0, addend & 0xFFFFFFFFL)
-  }
-
-  private[bignum] def compareArrays(a: Array[Int], b: Array[Int]): Int = {
-    if (a.size > b.size) 1
-    else if (a.size < b.size) -1
-    else {
-      @tailrec def rec(pos: Int): Int = {
-        if (pos >= 0 && a(pos) == b(pos))
-          rec(pos - 1)
-        else pos
-      }
-      val pos = rec(a.size - 1)
-      if (pos < 0) 0
-      else if ((a(pos) & 0xFFFFFFFFL) < (b(pos) & 0xFFFFFFFFL)) -1
-      else 1
-    }
   }
 
   private[bignum] def add(a: Array[Int], b: Array[Int]): Array[Int] = {
