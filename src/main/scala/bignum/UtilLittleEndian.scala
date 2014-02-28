@@ -138,6 +138,21 @@ object UtilLittleEndian {
     compute(0, 0L)
   }
 
+  // Caller has to make sure Positive Only
+  final def checkBit(digits: Array[Int], pos: Int): Boolean = {
+    if (pos > digits.length * 32) false
+    else {
+      // Position in Array
+      val index = (pos-1) / 32
+      // Position in the Integer
+      val intPos = pos % 32
+      print("ind =" + index + " "+ intPos)
+      println("val ="+((digits(index).unsignedToLong) & (1L << (intPos-1))))
+      if (((digits(index).unsignedToLong) & (1L << (intPos-1))) != 0) true
+      else false
+    }
+  }
+
   @inline final def unsignedMultAddAdd(a: Int, b: Int, c: Int, d: Int): Long =
     (a & 0xFFFFFFFFL) * (b & 0xFFFFFFFFL) + (c & 0xFFFFFFFFL) + (d & 0xFFFFFFFFL)
 

@@ -32,6 +32,7 @@ Benchmark
 ---------
 For Benchmarking, Length of Bignum in Base 2
 
+Oracle JDK7, Scala 2.10.2
 * *Addition*
 ```
 length  benchmark    ns linear runtime
@@ -89,3 +90,5 @@ length  benchmark    ns linear runtime
   50000 BigInteger 1237180500 ==========================
 ```
 Find the Benchmarking Code [here](https://github.com/techaddict/bignum/tree/master/benchmark)
+
+To run the code just enter `sbt 'project benchmark' run`

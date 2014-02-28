@@ -203,6 +203,26 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
     else
       BigInt2.shiftLeft(this, -n)
 
+  def testBit(n: Int): Boolean = {
+    if (n < 0)
+      throw new IllegalArgumentException("Negative Bit for Testing")
+    else if (this.isZero) false
+    else if (n == 0)
+      if (this.digits.size > 0) (this.digits(0).unsignedToLong & 1L) != 0
+      else false
+    // For Positive
+    else if (this.signum > 0) {
+      checkBit(digits, n)
+    }
+    // Negative 2's Compliment
+    else {
+      // Just one problem is all are one's in binary then diff :P
+      // of form 2^n -1 should be handled separate
+      val res = this.abs + BigInt2.minusOne
+      !checkBit(res.digits, n)
+    }
+  }
+
   private[this] def equalsArrays(a: Array[Int]): Boolean =
     if (a.size != digits.size)
       false
@@ -223,7 +243,7 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
     case _ => false
   }
 
-  val mag = digits
+  def mag = this.digits
 
   override def toString = BigInt2.toDecimalScaledString(this, 0)
 
