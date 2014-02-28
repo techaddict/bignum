@@ -1,8 +1,13 @@
 package bignum
 
 import scala.annotation.tailrec
+import scala.math.{ ScalaNumber, ScalaNumericConversions }
 
-class BigInt2 private[bignum](sign0: Int, digits0: Array[Int]) extends Ordered[BigInt2]{
+@SerialVersionUID(1L)
+class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
+  extends ScalaNumber with ScalaNumericConversions with Ordered[BigInt2]
+  with Serializable {
+
   if (sign0 < -1 || sign0 > 1)
     throw new IllegalArgumentException(sign0 + "signum Should be either -1, +1, 0")
   private[bignum] var sign: Int = sign0
@@ -120,7 +125,11 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int]) extends Ordered[B
       else (digits(0) & 0xFFFFFFFFL)
     if (digits.length < 3) sign * value else -1L
   }
+  def doubleValue = ???
+  def floatValue = ???
 
+  def isWhole = true
+  def underlying(): Object = this
   def signum = sign
 
   def -(a: BigInt2) = this + (-a)
@@ -156,7 +165,7 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int]) extends Ordered[B
     }
 
   private[bignum] def isOne = this equals BigInt2.one
-
+  def isZero: Boolean = this equals BigInt2.zero
   override def equals(that: Any): Boolean = that match {
     case a: BigInt2 =>
       compare(a) == 0
