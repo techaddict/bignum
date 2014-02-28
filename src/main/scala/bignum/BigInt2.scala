@@ -82,9 +82,9 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
     if (this.signum == that.signum) {
       val resDigits =
         if (this.digits.length >= that.digits.length)
-          BigInt2.add(this.digits, that.digits)
+          arrayPlusArray(this.digits, that.digits)
         else
-          BigInt2.add(that.digits, this.digits)
+          arrayPlusArray(that.digits, this.digits)
       val res = new BigInt2(this.signum, resDigits)
       res.cutOffLeadingZeroes
       res
@@ -358,28 +358,6 @@ object BigInt2 {
       else carry.toInt
     }
     compute(0, addend & 0xFFFFFFFFL)
-  }
-
-  private[bignum] def add(a: Array[Int], b: Array[Int]): Array[Int] = {
-    val res = new Array[Int](a.size + 1)
-    var carry = (a(0) & 0xFFFFFFFFL) + (b(0) & 0xFFFFFFFFL)
-    res(0) = carry.toInt
-    @tailrec def compute(pos: Int, carry: Long) {
-      if (pos < b.size) {
-        val tcarry = carry + (a(pos) & 0xFFFFFFFFL) + (b(pos) & 0xFFFFFFFFL)
-        res(pos) = tcarry.toInt
-        compute(pos + 1, tcarry >> 32)
-      }
-      else if (pos < a.size) {
-        val tcarry = carry + (a(pos) & 0xFFFFFFFFL)
-        res(pos) = tcarry.toInt
-        compute(pos + 1, tcarry >> 32)
-      }
-      else if (carry != 0)
-        res(pos) = carry.toInt
-    }
-    compute(1, carry >> 32)
-    res
   }
 
   private[bignum] def subtract(a: Array[Int], b: Array[Int]): Array[Int] = {
