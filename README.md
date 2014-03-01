@@ -28,11 +28,17 @@ BigInt2(value: Long)
   + Left Shift: `a << Int`
   + Right Shift: `a >> Int`
 
-Benchmark
----------
+**Benchmark**
+
 For Benchmarking, Length of Bignum in Base 2
 
 Oracle JDK7, Scala 2.10.2
+* *Left Shift*
+
+Better Perfomance
+
+`sbt 'project benchmark' 'run-main bignum.ShiftBenchmark'`
+
 * *Addition*
 ```
 length  benchmark    ns linear runtime

@@ -1,8 +1,15 @@
 package bignum
 
 import com.google.caliper.Param
+import com.google.caliper.{Runner => CaliperRunner}
 
-class Add extends SimpleScalaBenchmark {
+object MultiplyBenchmark {
+  def main(args: Array[String]) {
+    CaliperRunner.main(classOf[MultiplyBenchmark], args: _*)
+  }
+}
+
+class MultiplyBenchmark extends SimpleScalaBenchmark {
 
   @Param(Array("32", "64", "200", "500", "1000", "5000", "10000", "50000"))
   val length: Int = 0
@@ -23,7 +30,7 @@ class Add extends SimpleScalaBenchmark {
     var result = bigint
     var i = 0
     while (i < 5) {
-      result = result + result
+      result = result * result
       i = i + 1
     }
     result
@@ -33,7 +40,7 @@ class Add extends SimpleScalaBenchmark {
     var result = bigint2
     var i = 0
     while (i < 5) {
-      result = result + result
+      result = result * result
       i = i + 1
     }
     result
@@ -43,13 +50,10 @@ class Add extends SimpleScalaBenchmark {
     var result = biginteger
     var i = 0
     while (i < 5) {
-      result = result.add(result)
+      result = result.multiply(result)
       i = i + 1
     }
     result
-  }
-
-  override def tearDown() {
   }
 
 }
