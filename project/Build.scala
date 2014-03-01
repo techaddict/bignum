@@ -57,6 +57,7 @@ object MyBuild extends Build {
       "com.google.code.caliper" % "caliper" % "1.0-SNAPSHOT" from "http://plastic-idolatry.com/jars/caliper-1.0-SNAPSHOT.jar",
       "com.google.code.gson" % "gson" % "1.7.1"
     ),
+    parallelExecution := false,
     fork in run := true,
     onLoad in Global ~= { previous => state =>
       previous {
