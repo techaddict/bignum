@@ -2,6 +2,7 @@ package bignum
 
 import com.google.caliper.Param
 import com.google.caliper.{Runner => CaliperRunner}
+import org.apfloat.Apint
 
 object AddBenchmark {
   def main(args: Array[String]) {
@@ -17,13 +18,16 @@ class AddBenchmark extends SimpleScalaBenchmark {
   var bigint = BigInt("0")
   var bigint2 = BigInt2("0")
   var biginteger = new java.math.BigInteger("0")
+  var apint = new Apint("0")
 
   override def setUp() {
     val rng = new java.util.Random()
     val a = new java.math.BigInteger(length, rng).toString
+
     bigint = BigInt(a)
     bigint2 = BigInt2(a)
     biginteger = new java.math.BigInteger(a)
+    apint = new Apint(a)
   }
 
   def timeBigInt(reps: Int) = repeat(reps) {
@@ -48,6 +52,16 @@ class AddBenchmark extends SimpleScalaBenchmark {
 
   def timeBigInteger(reps: Int) = repeat(reps) {
     var result = biginteger
+    var i = 0
+    while (i < 5) {
+      result = result.add(result)
+      i = i + 1
+    }
+    result
+  }
+
+  def timeApint(reps: Int) = repeat(reps) {
+    var result = apint
     var i = 0
     while (i < 5) {
       result = result.add(result)
