@@ -5,6 +5,7 @@ import scala.math.{ ScalaNumber, ScalaNumericConversions }
 
 import UtilCommon._
 import UtilBigEndian._
+import UtilLittleEndian._
 
 @SerialVersionUID(1L)
 class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
@@ -50,66 +51,6 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
       else BigInt2.zero
     }
   }
-
-  def abs = if (sign < 0) -this else this
-
-  def /(divisor: BigInt2): BigInt2 = {
-    if (divisor.sign == 0)
-      throw new ArithmeticException("Divide by Zero")
-    if (divisor.isOne)
-      return (if (divisor.sign > 0) this else -this)
-    val divisorSign = divisor.sign
-    val thisSign = sign
-    val thisLen = digits.size
-    val divisorLen = divisor.digits.size
-    if (thisLen + divisorLen == 2) {
-      val value = (if (thisSign != divisorSign) -1 else 1) *
-        (digits(0) & 0xFFFFFFFFL) / (divisor.digits(0) & 0xFFFFFFFFL)
-      return BigInt2(value)
-    }
-    val cmp = compareArrays(digits, divisor.digits)
-    if (cmp == 0){
-      if (thisSign == divisorSign) BigInt2.one
-      else BigInt2.minusOne
-    }
-    else if (cmp < 0)
-      BigInt2.zero
-    else {
-      val resLength = thisLen - divisorLen + 1
-      val resDigits = new Array[Int](resLength)
-      val resSign = if (thisSign == divisorSign) 1 else -1
-      if (divisorLen == 1)
-        BigInt2.divideArrayByInt(resDigits, digits, divisor.digits(0))
-      else
-        BigInt2.divide(resDigits, digits, divisor.digits)
-      BigInt2(resSign, removeLeadingZeroes(resDigits))
-    }
-  }
-
-  def min(a: BigInt2): BigInt2 = if (this.compare(a) < 0) this else a
-
-  def max(a: BigInt2): BigInt2 = if (this.compare(a) > 0) this else a
-
-  def compare(that: BigInt2): Int =
-    if (sign > that.sign) 1
-    else if (sign < that.sign) -1
-    else sign * compareArrays(digits, that.digits)
-
-  def intValue: Int = if (digits.length < 2) sign * digits(0) else -1
-
-  def longValue: Long = {
-    val value =
-      if (digits.length > 1) ((digits(1).toLong) << 32) | (digits(0) & 0xFFFFFFFFL)
-      else (digits(0) & 0xFFFFFFFFL)
-    if (digits.length < 3) sign * value else -1L
-  }
-  def doubleValue = ???
-  def floatValue = ???
-
-  def isWhole = true
-  def underlying = this
-
-  def signum = sign
 
   def -(that: BigInt2): BigInt2 = {
     // If that is zero, return this.
@@ -172,23 +113,77 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
       return multiplySchoenhageStrassen(this, that)
   }
 
+  def /(divisor: BigInt2): BigInt2 = {
+    if (divisor.sign == 0)
+      throw new ArithmeticException("Divide by Zero")
+    if (divisor.isOne)
+      return (if (divisor.sign > 0) this else -this)
+    val divisorSign = divisor.sign
+    val thisSign = sign
+    val thisLen = digits.size
+    val divisorLen = divisor.digits.size
+    if (thisLen + divisorLen == 2) {
+      val value = (if (thisSign != divisorSign) -1 else 1) *
+        (digits(0) & 0xFFFFFFFFL) / (divisor.digits(0) & 0xFFFFFFFFL)
+      return BigInt2(value)
+    }
+    val cmp = compareArrays(digits, divisor.digits)
+    if (cmp == 0){
+      if (thisSign == divisorSign) BigInt2.one
+      else BigInt2.minusOne
+    }
+    else if (cmp < 0)
+      BigInt2.zero
+    else {
+      val resLength = thisLen - divisorLen + 1
+      val resDigits = new Array[Int](resLength)
+      val resSign = if (thisSign == divisorSign) 1 else -1
+      if (divisorLen == 1)
+        BigInt2.divideArrayByInt(resDigits, digits, divisor.digits(0))
+      else
+        BigInt2.divide(resDigits, digits, divisor.digits)
+      BigInt2(resSign, removeLeadingZeroes(resDigits))
+    }
+  }
+
+  def abs = if (sign < 0) -this else this
   def unary_- : BigInt2 = BigInt2(-sign, digits)
+  def signum = sign
+
+  def min(a: BigInt2): BigInt2 = if (this.compare(a) < 0) this else a
+  def max(a: BigInt2): BigInt2 = if (this.compare(a) > 0) this else a
+  def compare(that: BigInt2): Int =
+    if (sign > that.sign) 1
+    else if (sign < that.sign) -1
+    else sign * compareArrays(digits, that.digits)
+
+  def intValue: Int = if (digits.length < 2) sign * digits(0) else -1
+  def longValue: Long = {
+    val value =
+      if (digits.length > 1) ((digits(1).toLong) << 32) | (digits(0) & 0xFFFFFFFFL)
+      else (digits(0) & 0xFFFFFFFFL)
+    if (digits.length < 3) sign * value else -1L
+  }
+  def doubleValue = ???
+  def floatValue = ???
+
+  def isWhole = true
+  def underlying = this
 
   def <<(n: Int): BigInt2 =
     if ((n == 0) || (sign == 0))
       this
     else if (n > 0)
-      BigInt2.shiftLeft(new BigInt2(this.signum, this.digits.reverse), n)
+      shiftLeft(new BigInt2(this.signum, this.digits.reverse), n)
     else
-      BigInt2.shiftRight(new BigInt2(this.signum, this.digits.reverse), -n)
-
+      shiftRight(new BigInt2(this.signum, this.digits.reverse), -n)
   def >>(n: Int): BigInt2 =
     if ((n == 0) || (sign == 0))
       this
     else if (n > 0)
-      BigInt2.shiftRight(new BigInt2(this.signum, this.digits.reverse), n)
+      shiftRight(new BigInt2(this.signum, this.digits.reverse), n)
     else
-      BigInt2.shiftLeft(new BigInt2(this.signum, this.digits.reverse), -n)
+      shiftLeft(new BigInt2(this.signum, this.digits.reverse), -n)
 
   def testBit(n: Int): Boolean = {
     if (n < 0)
@@ -219,9 +214,6 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
         i -= 1
       (i < 0)
     }
-
-  private[bignum] def isOne = this equals BigInt2.one
-  def isZero: Boolean = this equals BigInt2.zero
   override def equals(that: Any): Boolean = that match {
     case a: BigInt2 =>
       compare(a) == 0
@@ -229,6 +221,10 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
       toString == b.toString
     case _ => false
   }
+
+  private[bignum] def isOne = this equals BigInt2.one
+  def isZero: Boolean = this equals BigInt2.zero
+
 
   def square: BigInt2 = {
     if (signum == 0)
@@ -598,113 +594,6 @@ object BigInt2 {
     else ret
   }
 
-  private[this] def shiftLeftOnce(result: Array[Int], source: Array[Int], srcLen: Int) {
-    @tailrec def compute(pos: Int, carry: Int): Int = {
-      if (pos < srcLen) {
-        val value = source(pos)
-        result(pos) = (value << 1) | carry
-        compute(pos + 1, value >>> 31)
-      }
-      else carry
-    }
-    val carry = compute(0, 0)
-    if (carry != 0)
-      result(srcLen) = carry
-  }
-
-  private[bignum] def shiftRight(source: BigInt2, count1: Int): BigInt2 = {
-    val intCount = count1 >> 5
-    val count = count1 & 31
-    if (intCount >= source.digits.size)
-      if (source.sign < 0) minusOne else zero
-    else {
-      var resLen = source.digits.size - intCount
-      val res = new Array[Int](resLen + 1)
-      shiftRight(res, resLen, source.digits, intCount, count)
-      if (source.sign < 0) {
-        @tailrec def rec(pos: Int): Int = {
-          if (pos < intCount && source.digits(pos) == 0)
-            rec(pos + 1)
-          else pos
-        }
-        val pos = rec(0)
-        if ((pos < intCount) || ((count >0) && ((source.digits(pos) << (32 - count)) != 0))) {
-          @tailrec def rec1(pos: Int): Int = {
-            if (pos < intCount && source.digits(pos) == -1){
-              res(pos + 1) = 0
-              rec1(pos + 1)
-            }
-            else pos
-          }
-          val i = rec1(0)
-          if (i == resLen) resLen += 1
-          res(i) += 1
-        }
-      }
-      BigInt2(source.sign, removeLeadingZeroes(res.reverse))
-    }
-  }
-
-  private[this] def shiftRight(res: Array[Int], resLen: Int, source: Array[Int],
-    intCount: Int, count: Int): Boolean = {
-    @tailrec def compute(pos: Int): Boolean = {
-      if (pos < intCount)
-        if (source(pos) == 0)
-          compute(pos + 1)
-        else
-          false
-      else
-        true
-    }
-    if (count == 0) {
-      scala.compat.Platform.arraycopy(source, intCount, res, 0, resLen)
-      compute(0)
-    }
-    else {
-      val leftShiftCount = 32 - count
-      @tailrec def compute1(pos: Int): Int = {
-        if (pos < resLen -1){
-          res(pos) = (source(pos + intCount) >>> count) |
-            (source(pos + intCount + 1) << leftShiftCount)
-          compute1(pos + 1)
-        }
-        else pos
-      }
-      val i = compute1(0)
-      res(i) = (source(i + intCount) >>> count)
-      compute(0) & (source(intCount) << leftShiftCount) == 0
-    }
-  }
-
-  private[bignum] def shiftLeft(source: BigInt2, count: Int): BigInt2 = {
-    val intCount = count >> 5
-    val count1 = count & 31
-    val resLength = source.digits.size + intCount + (if (count1 == 0) 0 else 1)
-    val res = new Array[Int](resLength)
-    shiftLeft(res, source.digits, intCount, count1)
-    BigInt2(source.sign, removeLeadingZeroes(res.reverse))
-  }
-
-  private[bignum] def shiftLeft(res: Array[Int], source: Array[Int], intCount: Int, count: Int) {
-    if (count == 0)
-      scala.compat.Platform.arraycopy(source, 0, res, intCount, res.size - intCount)
-    else {
-      val rightShiftCount = 32 - count
-      val start = res.size - 1
-      res(start) == 0
-      @tailrec def compute(pos: Int) {
-        if (pos > intCount) {
-          res(pos) |= (source(pos - intCount - 1) >>> rightShiftCount)
-          res(pos - 1) = source(pos - intCount - 1) << count
-          compute(pos - 1)
-        }
-      }
-      compute(start)
-    }
-    for (i <- 0 until intCount)
-      res(i) = 0
-  }
-
   // Could be broken into divideLongByInt
   private[bignum] def divideArrayByInt(dest: Array[Int], src: Array[Int], divisor: Int): Int = {
     var b = divisor & 0xFFFFFFFFL
@@ -751,8 +640,8 @@ object BigInt2 {
     val normB = new Array[Int](bLen + 1)
     val divisorShift = Integer.numberOfLeadingZeros(b(bLen - 1))
     if (divisorShift != 0) {
-      BigInt2.shiftLeft(normB, b, 0, divisorShift)
-      BigInt2.shiftLeft(normA, a, 0, divisorShift)
+      shiftLeft(normB, b, 0, divisorShift)
+      shiftLeft(normA, a, 0, divisorShift)
     }
     else {
       scala.compat.Platform.arraycopy(a, 0, normA, 0, aLen)
