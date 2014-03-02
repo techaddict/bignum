@@ -164,6 +164,7 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
       else (digits(0) & 0xFFFFFFFFL)
     if (digits.length < 3) sign * value else -1L
   }
+
   /**
     * Returns this value as a `Float`. Might lose precision.
     * If the magnitude is too large, `Float.MaxValue` (iff `sign == 1`)
@@ -188,6 +189,7 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
       shiftLeft(new BigInt2(this.signum, this.digits.reverse), n)
     else
       shiftRight(new BigInt2(this.signum, this.digits.reverse), -n)
+
   def >>(n: Int): BigInt2 =
     if ((n == 0) || (sign == 0))
       this
@@ -659,17 +661,13 @@ object BigInt2 {
     }
 
   private[bignum] def toDecimalScaledString(bi: BigInt2, scale: Int): String = {
-    var digits = bi.digits
-    var resLengthInChars = digits.size * 10 + 1 + 7
-    var result = new Array[Char](resLengthInChars + 1)
-    var currentChar = resLengthInChars
+    val digits = bi.digits
+    val result = new Array[Char](digits.size * 10 + 9)
     var x = BigInt(0)
     for (i <- digits.size - 1 to 0 by -1)
       x += BigInt(digits(i) & 0xFFFFFFFFL) << (32 * (digits.size - 1 - i))
-    val ret = x.toString
-    if (bi.sign == -1) "-" + ret
-    else if (ret == "") "0"
-    else ret
+    if (bi.sign == -1) "-" + x.toString
+    else x.toString
   }
 
   // Could be broken into divideLongByInt

@@ -96,8 +96,6 @@ object UtilLittleEndian {
       }
       compute(start)
     }
-    for (i <- 0 until intCount)
-      res(i) = 0
   }
 
 }
