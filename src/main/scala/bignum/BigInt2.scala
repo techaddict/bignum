@@ -16,44 +16,6 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
   private[bignum] var sign: Int = sign0
   private[bignum] var digits: Array[Int] = digits0
 
-  //Constructor's
-  private[bignum] def this(a1: String, radix: Int) {
-    this(0, Array(0))
-    if (a1.length == 0)
-      throw new NumberFormatException("Zero length BigInteger")
-    val a = a1.dropWhile(_ == '0')
-    if (a != "") {
-      // Doesn't Handle +123
-      val sign1 = if (a.size > 0 && a(0) == '-') -1 else 1
-      val startChar = if (sign1 == -1) 1 else 0
-      val stringLength = a.size + (if (sign1 == -1) -1 else 0)
-
-      val charsPerInt = BigInt2.digitFitInInt(radix)
-      val topChars = stringLength % charsPerInt
-      val bigRadixDigitsLength = (stringLength / charsPerInt) + (if (topChars != 0) 1 else 0)
-      var digits1 = new Array[Int](bigRadixDigitsLength)
-      val bigRadix = BigInt2.bigRadices(radix - 2)
-
-      def init(ind: Int, substrStart: Int, substrEnd: Int): Int = {
-        if (substrStart < a.size) {
-          val bigRadixDigit = Integer.parseInt(a.substring(substrStart, substrEnd), radix)
-          if (bigRadixDigit < 0)
-            throw new NumberFormatException("Illegal Digit")
-          // digits * bigRadix + bigRadixDigit
-          val newDigit = multiplyByInt(digits1, ind, bigRadix)
-          digits1(ind) = newDigit + inplaceAdd(digits1, ind, bigRadixDigit)
-          init(ind + 1, substrEnd, substrEnd + charsPerInt)
-        }
-        else
-          ind
-      }
-      val substrEnd = startChar + (if (topChars == 0) charsPerInt else topChars)
-      init(0, startChar, substrEnd)
-      sign = sign1
-      digits = removeLeadingZeroes(digits1.reverse)
-    }
-  }
-
   def +(that: BigInt2): BigInt2 = {
     /* Check if one of the numbers are zero and return the other one.
      * `that` needs to be checked first, so that a NPE gets thrown if it is null. */
@@ -511,8 +473,42 @@ object BigInt2 {
     481890304, 594823321, 729000000, 887503681, 1073741824, 1291467969, 1544804416,
     1838265625, 60466176)
 
-  def apply(a: String) = new BigInt2(a, 10)
-  def apply(a: String, radix: Int) = new BigInt2(a, radix)
+  def apply(a: String): BigInt2 = BigInt2(a, 10)
+  def apply(a1: String, radix: Int): BigInt2 = {
+    if (a1.length == 0)
+      throw new NumberFormatException("Zero length BigInteger")
+    val a = a1.dropWhile(_ == '0')
+    if (a != "") {
+      // Doesn't Handle +123
+      val sign = if (a.size > 0 && a(0) == '-') -1 else 1
+      val startChar = if (sign == -1) 1 else 0
+      val stringLength = a.size + (if (sign == -1) -1 else 0)
+
+      val charsPerInt = BigInt2.digitFitInInt(radix)
+      val topChars = stringLength % charsPerInt
+      val bigRadixDigitsLength = (stringLength / charsPerInt) + (if (topChars != 0) 1 else 0)
+      val digits = new Array[Int](bigRadixDigitsLength)
+      val bigRadix = BigInt2.bigRadices(radix - 2)
+
+      def init(ind: Int, substrStart: Int, substrEnd: Int): Int = {
+        if (substrStart < a.size) {
+          val bigRadixDigit = Integer.parseInt(a.substring(substrStart, substrEnd), radix)
+          if (bigRadixDigit < 0)
+            throw new NumberFormatException("Illegal Digit")
+          // digits * bigRadix + bigRadixDigit
+          val newDigit = multiplyByInt(digits, ind, bigRadix)
+          digits(ind) = newDigit + inplaceAdd(digits, ind, bigRadixDigit)
+          init(ind + 1, substrEnd, substrEnd + charsPerInt)
+        }
+        else
+          ind
+      }
+      val substrEnd = startChar + (if (topChars == 0) charsPerInt else topChars)
+      init(0, startChar, substrEnd)
+      new BigInt2(sign, removeLeadingZeroes(digits.reverse))
+    }
+    else zero
+  }
   private[bignum] def apply(sign: Int, value: Int) = new BigInt2(sign, Array(value))
   private[bignum] def apply(sign: Int, value: Array[Int]) = new BigInt2(sign, value)
   /**
