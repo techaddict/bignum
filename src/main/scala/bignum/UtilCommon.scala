@@ -36,36 +36,36 @@ object UtilCommon {
       // and faster above ~73,200 ints (~705,000 decimal digits).
       // Between those values, it changes several times.
       if (length < 15500)
-        return false;
+        return false
       if (length < 16384) // 2^14
-        return true;
+        return true
       if (length < 26300)
-        return false;
+        return false
       if (length < 32768) // 2^15
-        return true;
+        return true
       if (length < 44000)
-        return false;
+        return false
       if (length < 65536) // 2^16
-        return true;
+        return true
       if (length < 73200)
-        return false;
-      return true;
+        return false
+      return true
     } else {
       // The following values were determined experimentally on a 32-bit JVM.
       // SS is slower than Toom-Cook below ~6,300 ints (~60,700 decimal digits)
       // and faster above ~34,000 ints (~327,500 decimal digits).
       // Between those values, it changes several times.
       if (length < 6300)
-        return false;
+        return false
       if (length < 16384) // 2^14
-        return true;
+        return true
       if (length < 19300)
-        return false;
+        return false
       if (length < 32768) // 2^15
-        return true;
+        return true
       if (length < 34000)
-        return false;
-      return true;
+        return false
+      return true
     }
   }
 
@@ -130,40 +130,40 @@ object UtilCommon {
     * Karatsuba multiplication will be used. This value is found
     * experimentally to work well.
     */
-  final val KaratsubaThreshold = 50;
+  final val KaratsubaThreshold = 50
 
   /** The threshold value for using 3-way Toom-Cook multiplication.
     * If the number of ints in both mag arrays are greater than this number,
     * then Toom-Cook multiplication will be used. This value is found
     * experimentally to work well.
     */
-  final val ToomCookThreshold = 75;
+  final val ToomCookThreshold = 75
 
   /** The threshold value for using Karatsuba squaring. If the number
     * of ints in the number are larger than this value,
     * Karatsuba squaring will be used. This value is found
     * experimentally to work well.
     */
-  final val KaratsubaSquareThreshold = 90;
+  final val KaratsubaSquareThreshold = 90
 
   /** The threshold value for using Toom-Cook squaring. If the number
     * of ints in the number are larger than this value,
     * Toom-Cook squaring will be used. This value is found
     * experimentally to work well.
     */
-  final val ToomCookSquareThreshold = 140;
+  final val ToomCookSquareThreshold = 140
 
   /** The threshold value for using Burnikel-Ziegler division. If the number
     * of ints in the number are larger than this value,
     * Burnikel-Ziegler division will be used. This value is found
     * experimentally to work well.
     */
-  final val BurnikelZieglerThreshold = 50;
+  final val BurnikelZieglerThreshold = 50
 
   /** The threshold value, in bits, for using Newton iteration when
     * computing the reciprocal of a number.
     */
-  final val NewtonThreshold = 100;
+  final val NewtonThreshold = 100
 
   /** The threshold value for using Schoenhage recursive base conversion. If
     * the number of ints in the number are larger than this value,

@@ -216,17 +216,17 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
     if ((n == 0) || (sign == 0))
       this
     else if (n > 0)
-      BigInt2.shiftLeft(this, n)
+      BigInt2.shiftLeft(new BigInt2(this.signum, this.digits.reverse), n)
     else
-      BigInt2.shiftRight(this, -n)
+      BigInt2.shiftRight(new BigInt2(this.signum, this.digits.reverse), -n)
 
   def >>(n: Int): BigInt2 =
     if ((n == 0) || (sign == 0))
       this
     else if (n > 0)
-      BigInt2.shiftRight(this, n)
+      BigInt2.shiftRight(new BigInt2(this.signum, this.digits.reverse), n)
     else
-      BigInt2.shiftLeft(this, -n)
+      BigInt2.shiftLeft(new BigInt2(this.signum, this.digits.reverse), -n)
 
   def testBit(n: Int): Boolean = {
     if (n < 0)
@@ -491,7 +491,7 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
     return new BigInt2(signum, result)
   }
 
-  def mag = this.digits
+  def mag = digits
 
   override def toString = BigInt2.toDecimalScaledString(this, 0)
 
@@ -645,7 +645,7 @@ object BigInt2 {
           res(i) += 1
         }
       }
-      BigInt2(source.sign, removeLeadingZeroes(res))
+      BigInt2(source.sign, removeLeadingZeroes(res.reverse))
     }
   }
 
@@ -686,7 +686,7 @@ object BigInt2 {
     val resLength = source.digits.size + intCount + (if (count1 == 0) 0 else 1)
     val res = new Array[Int](resLength)
     shiftLeft(res, source.digits, intCount, count1)
-    BigInt2(source.sign, removeLeadingZeroes(res))
+    BigInt2(source.sign, removeLeadingZeroes(res.reverse))
   }
 
   private[bignum] def shiftLeft(res: Array[Int], source: Array[Int], intCount: Int, count: Int) {
