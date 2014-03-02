@@ -4,6 +4,8 @@ import com.google.caliper.Param
 import com.google.caliper.{Runner => CaliperRunner}
 import org.apfloat.Apint
 
+import annotation.tailrec
+
 object MultiplyBenchmark {
   def main(args: Array[String]) {
     CaliperRunner.main(classOf[MultiplyBenchmark], args: _*)
@@ -12,7 +14,7 @@ object MultiplyBenchmark {
 
 class MultiplyBenchmark extends SimpleScalaBenchmark {
 
-  @Param(Array("32", "64", "200", "500", "1000", "5000", "10000", "50000"))
+  @Param(Array("32", "64", "200", "500", "1000", "5000", "10000", "20000"))
   val length: Int = 0
 
   var bigint = BigInt("0")
@@ -31,42 +33,42 @@ class MultiplyBenchmark extends SimpleScalaBenchmark {
 
   def timeBigInt(reps: Int) = repeat(reps) {
     var result = bigint
-    var i = 0
-    while (i < 5) {
+    tfor(0)(_ < 5, _ + 1) { i =>
       result = result * result
-      i = i + 1
     }
     result
   }
 
   def timeBigInt2(reps: Int) = repeat(reps) {
     var result = bigint2
-    var i = 0
-    while (i < 5) {
+    tfor(0)(_ < 5, _ + 1) { i =>
       result = result * result
-      i = i + 1
     }
     result
   }
 
   def timeBigInteger(reps: Int) = repeat(reps) {
     var result = biginteger
-    var i = 0
-    while (i < 5) {
+    tfor(0)(_ < 5, _ + 1) { i =>
       result = result.multiply(result)
-      i = i + 1
     }
     result
   }
 
   def timeApint(reps: Int) = repeat(reps) {
     var result = apint
-    var i = 0
-    while (i < 5) {
+    tfor(0)(_ < 5, _ + 1) { i =>
       result = result.multiply(result)
-      i = i + 1
     }
     result
+  }
+
+  @tailrec
+  final def tfor[@specialized T](i: T)(test: T => Boolean, inc: T => T)(f: T => Unit) {
+    if(test(i)) {
+      f(i)
+      tfor(inc(i))(test, inc)(f)
+    }
   }
 
 }
