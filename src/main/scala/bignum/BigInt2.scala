@@ -164,8 +164,19 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
       else (digits(0) & 0xFFFFFFFFL)
     if (digits.length < 3) sign * value else -1L
   }
-  def doubleValue = ???
-  def floatValue = ???
+  /**
+    * Returns this value as a `Float`. Might lose precision.
+    * If the magnitude is too large, `Float.MaxValue` (iff `sign == 1`)
+    * or `Float.MinValue` (iff `sign == -1`) are returned.
+    */
+  def floatValue: Float = toString.toFloat
+
+  /**
+    * Returns this value as a `Double`. Might lose precision.
+    * If the magnitude is too large, `Double.MaxValue` (iff `sign == 1`)
+    * or `Double.MinValue` (iff `sign == -1`) are returned.
+    */
+  def doubleValue: Double = toString.toDouble
 
   def isWhole = true
   def underlying = this
@@ -205,6 +216,28 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
     }
   }
 
+  def unary_~ : BigInt2 = {
+    val result = new Array[Int](digits.length)
+    var i = 0
+    while (i < digits.length) {
+      result(i) = ~digits(i)
+      i += 1
+    }
+    new BigInt2(???, result)
+  }
+
+  /** Bitwise and of BigInt2s. */
+  def &(that: BigInt2): BigInt2 = ???
+
+  /** Bitwise or of BigInt2s. */
+  def |(that: BigInt2): BigInt2 = ???
+
+  /** Bitwise exclusive-or of BigInt2s. */
+  def ^(that: BigInt2): BigInt2 = ???
+
+  /** Bitwise and-not of BigInt2s. Returns a BigInt2 whose value is (this & ~that). */
+  def &~(that: BigInt2): BigInt2 = ???
+
   private[this] def equalsArrays(a: Array[Int]): Boolean =
     if (a.size != digits.size)
       false
@@ -215,16 +248,41 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
       (i < 0)
     }
   override def equals(that: Any): Boolean = that match {
-    case a: BigInt2 =>
-      compare(a) == 0
-    case b: BigInt =>
-      toString == b.toString
+    case a: BigInt2 => compare(a) == 0
+    case b: BigInt => toString == b.toString
     case _ => false
   }
 
-  private[bignum] def isOne = this equals BigInt2.one
+  def isOne = this equals BigInt2.one
   def isZero: Boolean = this equals BigInt2.zero
+  def isPositive: Boolean = this.signum == 1
+  def isNegative: Boolean = this.signum == -1
+  def isEven: Boolean = isZero || ((digits(0) & 0x1) == 0)
+  def isOdd: Boolean = !isZero && ((digits(0) & 0x1) == 1)
 
+  def isValidLong: Boolean = this >= BigInt2(Long.MinValue) && this <= BigInt2(Long.MaxValue)
+  /** Returns `true` iff this can be represented exactly by [[scala.Float]]; otherwise returns `false`. */
+  def isValidFloat = {
+    val bitLen = bitLength
+    (bitLen <= 24 ||
+      {
+        val lowest = lowestSetBit
+        bitLen <= java.lang.Float.MAX_EXPONENT + 1 && // exclude this < -2^128 && this >= 2^128
+          lowest >= bitLen - 24 &&
+          lowest < java.lang.Float.MAX_EXPONENT + 1 // exclude this == -2^128
+      })
+  }
+  /** Returns `true` iff this can be represented exactly by [[scala.Double]]; otherwise returns `false`. */
+  def isValidDouble = {
+    val bitLen = bitLength
+    (bitLen <= 53 ||
+      {
+        val lowest = lowestSetBit
+        bitLen <= java.lang.Double.MAX_EXPONENT + 1 && // exclude this < -2^1024 && this >= 2^1024
+          lowest >= bitLen - 53 &&
+          lowest < java.lang.Double.MAX_EXPONENT + 1 // exclude this == -2^1024
+      })
+  }
 
   def square: BigInt2 = {
     if (signum == 0)
@@ -238,6 +296,26 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
     * excluding a sign bit.
     */
   def bitLength: Int = ???
+
+  /**
+    * Returns the number of bits in the two's complement representation of this BigInt
+    * that differ from its sign bit.
+    */
+  def bitCount: Int = {
+    var i = 0
+    var bits = 0
+    val len = digits.length
+    while (i < len) {
+      bits += Integer bitCount digits(i)
+      i += 1
+    }
+    if (isNegative) {
+      // TODO?
+    }
+    bits
+  }
+
+  def lowestSetBit: Int = ???
 
   /**
     * Returns a <code>BigInteger</code> containing <code>blockLength</code> ints from
