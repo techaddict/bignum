@@ -98,7 +98,7 @@ object UtilLittleEndian {
     compute(0, addend & 0xFFFFFFFFL)
   }
 
-  final def inplaceMultArrays(a: Array[Int], b: Array[Int], res: Array[Int]) {
+  final def inplaceMultArrays(res: Array[Int], a: Array[Int], b: Array[Int]) {
     val aLen = a.size
     val bLen = b.size
     if (!(aLen == 0 || bLen == 0))

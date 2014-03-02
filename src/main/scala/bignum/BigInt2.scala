@@ -184,7 +184,23 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
     }
   }
 
-  def *(a: BigInt2) = BigInt2.multiply(this, a)
+  def *(that: BigInt2): BigInt2 = {
+    /* `that` needs to be checked first, so that a NPE gets thrown if it is null. */
+    if (that.isZero || this.isZero)
+      BigInt2.zero
+    else if (this.isOne)
+      that
+    else if (that.isOne)
+      this
+    else {
+      val resLength = this.digits.size + that.digits.size
+      val resSign = if (this.sign != that.sign) -1 else 1
+      val resDigits = new Array[Int](resLength)
+      inplaceMultArrays(resDigits, this.digits, that.digits)
+      BigInt2(resSign, removeLeadingZeroes(resDigits))
+    }
+  }
+
   def unary_- : BigInt2 = BigInt2(-sign, digits)
 
   def <<(n: Int): BigInt2 =
@@ -352,23 +368,6 @@ object BigInt2 {
     if (bi.sign == -1) "-" + ret
     else if (ret == "") "0"
     else ret
-  }
-
-  private[bignum] def multiply(a: BigInt2, b: BigInt2): BigInt2 = {
-    val resLength = a.digits.size + b.digits.size
-    val resSign =
-      if (0 == a.sign || 0 == b.sign) 0
-      else if (a.sign != b.sign) -1
-      else 1
-    if (resLength == 2) {
-      val value = unsignedMultAddAdd(a.digits(0), b.digits(0), 0, 0)
-      BigInt2(resSign * value)
-    }
-    else {
-      val resDigits = new Array[Int](resLength)
-      inplaceMultArrays(a.digits, b.digits, resDigits)
-      BigInt2(resSign, removeLeadingZeroes(resDigits))
-    }
   }
 
   private[this] def shiftLeftOnce(result: Array[Int], source: Array[Int], srcLen: Int) {
