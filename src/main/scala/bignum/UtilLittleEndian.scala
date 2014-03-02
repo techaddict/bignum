@@ -86,18 +86,6 @@ object UtilLittleEndian {
     res
   }
 
-  final def inplaceAdd(a: Array[Int], aSize: Int, addend: Int): Int = {
-    @tailrec def compute(pos: Int, carry: Long): Int = {
-      if (pos < aSize && carry != 0) {
-        val tcarry = carry + (a(pos) & 0xFFFFFFFFL)
-        a(pos) = tcarry.toInt
-        compute(pos + 1, tcarry >>> 32)
-      }
-      else carry.toInt
-    }
-    compute(0, addend & 0xFFFFFFFFL)
-  }
-
   final def inplaceMultArrays(res: Array[Int], a: Array[Int], b: Array[Int]) {
     val aLen = a.size
     val bLen = b.size

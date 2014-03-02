@@ -4,7 +4,7 @@ import scala.annotation.tailrec
 import scala.math.{ ScalaNumber, ScalaNumericConversions }
 
 import UtilCommon._
-import UtilLittleEndian._
+import UtilBigEndian._
 
 @SerialVersionUID(1L)
 class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
@@ -50,7 +50,7 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
       val substrEnd = startChar + (if (topChars == 0) charsPerInt else topChars)
       init(0, startChar, substrEnd)
       sign = sign1
-      digits = removeLeadingZeroes(digits1)
+      digits = removeLeadingZeroes(digits1.reverse)
     }
   }
 
@@ -186,19 +186,28 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
 
   def *(that: BigInt2): BigInt2 = {
     /* `that` needs to be checked first, so that a NPE gets thrown if it is null. */
+    val xlen = mag.length
+    val ylen = that.mag.length
+
     if (that.isZero || this.isZero)
       BigInt2.zero
     else if (this.isOne)
       that
     else if (that.isOne)
       this
-    else {
+    else if ((xlen < KaratsubaThreshold) || (ylen < KaratsubaThreshold)) {
       val resLength = this.digits.size + that.digits.size
       val resSign = if (this.sign != that.sign) -1 else 1
       val resDigits = new Array[Int](resLength)
-      inplaceMultArrays(resDigits, this.digits, that.digits)
-      BigInt2(resSign, removeLeadingZeroes(resDigits))
+      inplaceMultArrays(resDigits, this.digits.reverse, that.digits.reverse)
+      BigInt2(resSign, removeLeadingZeroes(resDigits.reverse))
     }
+    else if ((xlen < ToomCookThreshold) && (ylen < ToomCookThreshold))
+      return multiplyKaratsuba(this, that);
+    else if (!shouldMultiplySchoenhageStrassen(xlen) || !shouldMultiplySchoenhageStrassen(ylen))
+      return multiplyToomCook3(this, that);
+    else
+      return multiplySchoenhageStrassen(this, that)
   }
 
   def unary_- : BigInt2 = BigInt2(-sign, digits)
@@ -257,6 +266,229 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
     case b: BigInt =>
       toString == b.toString
     case _ => false
+  }
+
+  def square: BigInt2 = {
+    if (signum == 0)
+      return BigInt2.zero
+    else
+      this * this
+  }
+
+  /**
+    * Returns the number of bits in the minimal two's-complement representation of this BigInt,
+    * excluding a sign bit.
+    */
+  def bitLength: Int = ???
+
+  /**
+    * Returns a <code>BigInteger</code> containing <code>blockLength</code> ints from
+    * <code>this</code> number, starting at <code>index*blockLength</code>.<br/>
+    * Used by Burnikel-Ziegler division.
+    * @param index the block index
+    * @param numBlocks the total number of blocks in <code>this</code> number
+    * @param blockLength length of one block in units of 32 bits
+    * @return
+    */
+  private[bignum] def getBlock(index: Int, numBlocks: Int, blockLength: Int): BigInt2 = {
+    val blockStart: Int = index * blockLength;
+    if (blockStart >= mag.length)
+      return BigInt2.zero
+
+    var blockEnd = 0
+    if (index == numBlocks - 1)
+      blockEnd = (bitLength + 31) / 32;
+    else
+      blockEnd = (index + 1) * blockLength;
+    if (blockEnd > mag.length)
+      return BigInt2.zero
+
+    val newMag = removeLeadingZeroes(java.util.Arrays.copyOfRange(mag, mag.length - blockEnd, mag.length - blockStart))
+    return new BigInt2(signum, newMag)
+  }
+
+  /**
+    * Returns a number equal to <code>this.shiftRightInts(n).getLower(n)</code>.<br/>
+    * Used by Burnikel-Ziegler division.
+    * @param n a non-negative number
+    * @return <code>n</code> bits of <code>this</code> starting at bit <code>n</code>
+    */
+  private[bignum] def shiftAndTruncate(n: Int): BigInt2 = {
+    if (mag.length <= n)
+      return BigInt2.zero
+    if (mag.length <= 2 * n) {
+      val newMag = removeLeadingZeroes(java.util.Arrays.copyOfRange(mag, 0, mag.length - n))
+      return new BigInt2(signum, newMag)
+    } else {
+      val newMag = removeLeadingZeroes(java.util.Arrays.copyOfRange(mag, mag.length - 2 * n, mag.length - n))
+      return new BigInt2(signum, newMag)
+    }
+  }
+
+  /**
+    * Same as {@link BigInteger#shiftRight(int)} but rounds to the
+    * nearest integer.
+    * @param n shift distance, in bits.
+    * @return round(this*2<sup>-n</sup>)
+    */
+  private def shiftRightRounded(n: Int): BigInt2 = {
+    var b = this >> n
+    if (n > 0 && testBit(n - 1))
+      b = b + BigInt2.one
+    return b;
+  }
+
+  /**
+    * Shifts a number to the left by a multiple of 32. Used by Burnikel-Ziegler division.
+    * @param n a non-negative number
+    * @return <code>this.shiftLeft(32*n)</code>
+    */
+  private[bignum] def shiftLeftInts(n: Int): BigInt2 = {
+    val newMag = removeLeadingZeroes(java.util.Arrays.copyOf(mag, mag.length + n))
+    new BigInt2(signum, newMag)
+  }
+
+  /**
+    * Shifts a number to the right by a multiple of 32. Used by Burnikel-Ziegler division.
+    * @param n a non-negative number
+    * @return <code>this.shiftRight(32*n)</code>
+    */
+  private[bignum] def shiftRightInts(n: Int): BigInt2 = {
+    if (n >= mag.length)
+      BigInt2.zero
+    else
+      new BigInt2(signum, java.util.Arrays.copyOf(mag, mag.length - n))
+  }
+
+  /**
+    * Returns a new BigInteger representing n lower ints of the number.
+    * This is used by Karatsuba multiplication, Karatsuba squaring,
+    * and Burnikel-Ziegler division.
+    */
+  final def lowerInts(n: Int): BigInt2 = {
+    val len = mag.length;
+
+    if (len <= n)
+      return this
+
+    val lowerInts = new Array[Int](n)
+    scala.compat.Platform.arraycopy(mag, len - n, lowerInts, 0, n);
+
+    return new BigInt2(1, removeLeadingZeroes(lowerInts))
+  }
+
+  /**
+    * Returns a new BigInteger representing mag.length-n upper
+    * ints of the number. This is used by Karatsuba multiplication,
+    * Karatsuba squaring, and Burnikel-Ziegler division.
+    */
+  final def upperInts(n: Int): BigInt2 = {
+    val len = mag.length;
+
+    if (len <= n)
+      return BigInt2.zero
+
+    val upperLen = len - n;
+    val upperInts = new Array[Int](upperLen)
+    scala.compat.Platform.arraycopy(mag, 0, upperInts, 0, upperLen);
+
+    return new BigInt2(1, removeLeadingZeroes(upperInts));
+  }
+
+  /**
+    * Returns a slice of a BigInteger for use in Toom-Cook multiplication.
+    * @param lowerSize The size of the lower-order bit slices.
+    * @param upperSize The size of the higher-order bit slices.
+    * @param slice The index of which slice is requested, which must be a
+    * number from 0 to size-1. Slice 0 is the highest-order bits,
+    * and slice size-1 are the lowest-order bits.
+    * Slice 0 may be of different size than the other slices.
+    * @param fullsize The size of the larger integer array, used to align
+    * slices to the appropriate position when multiplying different-sized
+    * numbers.
+    */
+  def toomSlice(lowerSize: Int, upperSize: Int, slice: Int, fullsize: Int): BigInt2 = {
+    //int start, end, sliceSize, len, offset;
+
+    val len = mag.length;
+    val offset = fullsize - len;
+    var start = 0
+    var end = 0
+
+    if (slice == 0) {
+      start = 0 - offset;
+      end = upperSize - 1 - offset;
+    } else {
+      start = upperSize + (slice - 1) * lowerSize - offset;
+      end = start + lowerSize - 1;
+    }
+
+    if (start < 0)
+      start = 0;
+    if (end < 0)
+      return BigInt2.zero;
+
+    val sliceSize = (end - start) + 1;
+
+    if (sliceSize <= 0)
+      return BigInt2.zero;
+
+    // While performing Toom-Cook, all slices are positive and
+    // the sign is adjusted when the final number is composed.
+    if (start == 0 && sliceSize >= len)
+      return this.abs
+
+    val intSlice: Array[Int] = new Array[Int](sliceSize)
+    scala.compat.Platform.arraycopy(mag, start, intSlice, 0, sliceSize)
+
+    return new BigInt2(1, removeLeadingZeroes(intSlice))
+  }
+
+  /**
+  * Does an exact division (that is, the remainder is known to be zero)
+  * of the specified number by 3. This is used in Toom-Cook
+  * multiplication. This is an efficient algorithm that runs in linear
+  * time. If the argument is not exactly divisible by 3, results are
+  * undefined. Note that this is expected to be called with positive
+  * arguments only.
+  */
+  private[bignum] def exactDivideBy3: BigInt2 = {
+    val len: Int = mag.length;
+    var result: Array[Int] = new Array[Int](len)
+
+    var x: Long = 0L
+    var w: Long = 0L
+    var q: Long = 0L
+    var borrow: Long = 0L
+
+    var i = len - 1
+
+    while (i >= 0) {
+
+      x = mag(i).unsignedToLong
+      w = x - borrow;
+      if (borrow > x) // Did we make the number go negative?
+        borrow = 1L;
+      else
+        borrow = 0L;
+
+      // 0xAAAAAAAB is the modular inverse of 3 (mod 2^32). Thus,
+      // the effect of this is to divide by 3 (mod 2^32).
+      // This is much faster than division on most architectures.
+      q = (w * 0xAAAAAAABL) & UnsignedIntMask
+      result(i) = q.toInt
+
+      // Now check the borrow. The second check can of course be
+      // eliminated if the first fails.
+      if (q >= 0x55555556L) {
+        borrow += 1
+        if (q >= 0xAAAAAAABL)
+          borrow += 1;
+      }
+      i -= 1
+    }
+    result = removeLeadingZeroes(result)
+    return new BigInt2(signum, result)
   }
 
   def mag = this.digits
@@ -363,7 +595,7 @@ object BigInt2 {
     var currentChar = resLengthInChars
     var x = BigInt(0)
     for (i <- digits.size - 1 to 0 by -1)
-      x += BigInt(digits(i) & 0xFFFFFFFFL) << (32 * i)
+      x += BigInt(digits(i) & 0xFFFFFFFFL) << (32 * (digits.size - 1 - i))
     val ret = x.toString
     if (bi.sign == -1) "-" + ret
     else if (ret == "") "0"

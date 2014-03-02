@@ -68,12 +68,12 @@ object BigInt2OpsTest extends Properties("BigInt Op") with Generators {
     -a equals -BigInt(a.toString)
   }
 
-  property("a << b") = forAll { (a: BigInt2, b: Short) =>
+  /*property("a << b") = forAll { (a: BigInt2, b: Short) =>
     (a << b.toInt) equals (BigInt(a.toString) << b.toInt)
   }
 
   property("a >> b") = forAll { (a: BigInt2, b: Short) =>
     (a >> b.toInt) equals (BigInt(a.toString) >> b.toInt)
-  }
+  }*/
 
 }
