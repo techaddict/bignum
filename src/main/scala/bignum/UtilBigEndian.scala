@@ -9,13 +9,13 @@ object UtilBigEndian {
   final def inplaceAdd(a: Array[Int], aSize: Int, addend: Int): Int = {
     @tailrec def compute(pos: Int, carry: Long): Int = {
       if (pos < aSize && carry != 0) {
-        val tcarry = carry + (a(pos) & 0xFFFFFFFFL)
+        val tcarry = carry + (a(pos).unsignedToLong)
         a(pos) = tcarry.toInt
         compute(pos + 1, tcarry >>> 32)
       }
       else carry.toInt
     }
-    compute(0, addend & 0xFFFFFFFFL)
+    compute(0, addend.unsignedToLong)
   }
 
   final def inplaceMultArrays(res: Array[Int], a: Array[Int], b: Array[Int]) {
@@ -74,7 +74,7 @@ object UtilBigEndian {
   }
 
   @inline final def unsignedMultAddAdd(a: Int, b: Int, c: Int, d: Int): Long =
-    (a & 0xFFFFFFFFL) * (b & 0xFFFFFFFFL) + (c & 0xFFFFFFFFL) + (d & 0xFFFFFFFFL)
+    (a.unsignedToLong) * (b.unsignedToLong) + (c.unsignedToLong) + (d.unsignedToLong)
 
   //BigEndian's
   /** Returns the original array if unchanged. */
