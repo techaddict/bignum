@@ -71,31 +71,29 @@ object UtilLittleEndian {
     }
   }
 
-  def shiftLeft(source: BigInt2, count: Int): BigInt2 = {
-    val intCount = count >> 5
-    val count1 = count & 31
-    val resLength = source.digits.size + intCount + (if (count1 == 0) 0 else 1)
+  def shiftLeft(source: BigInt2, count1: Int): BigInt2 = {
+    // We don't to shift one by one :)
+    // First Shift in Multiples of 32, then in last
+    val intCount = count1 >> 5
+    // the remaining Part
+    val count = count1 & 31
+    // if the remaining Part is not 0 reslength + 1
+    val resLength = source.digits.size + intCount + (if (count == 0) 0 else 1)
     val res = new Array[Int](resLength)
-    shiftLeft(res, source.digits, intCount, count1)
-    BigInt2(source.sign, removeLeadingZeroes(res.reverse))
-  }
-
-  def shiftLeft(res: Array[Int], source: Array[Int], intCount: Int, count: Int) {
+    // All the work is done here
     if (count == 0)
-      scala.compat.Platform.arraycopy(source, 0, res, intCount, res.size - intCount)
+      scala.compat.Platform.arraycopy(source.digits, 0, res, intCount, res.size - intCount)
     else {
-      val rightShiftCount = 32 - count
-      val start = res.size - 1
-      res(start) == 0
       @tailrec def compute(pos: Int) {
         if (pos > intCount) {
-          res(pos) |= (source(pos - intCount - 1) >>> rightShiftCount)
-          res(pos - 1) = source(pos - intCount - 1) << count
+          res(pos) |= (source.digits(pos - intCount - 1) >>> (32 - count))
+          res(pos - 1) = source.digits(pos - intCount - 1) << count
           compute(pos - 1)
         }
       }
-      compute(start)
+      compute(res.size - 1)
     }
+    BigInt2(source.sign, removeLeadingZeroes(res.reverse))
   }
 
 }

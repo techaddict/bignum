@@ -716,8 +716,8 @@ object BigInt2 {
     val normB = new Array[Int](bLen + 1)
     val divisorShift = Integer.numberOfLeadingZeros(b(bLen - 1))
     if (divisorShift != 0) {
-      shiftLeft(normB, b, 0, divisorShift)
-      shiftLeft(normA, a, 0, divisorShift)
+      //shiftLeft(normB, b, 0, divisorShift)
+      //shiftLeft(normA, a, 0, divisorShift)
     }
     else {
       scala.compat.Platform.arraycopy(a, 0, normA, 0, aLen)
