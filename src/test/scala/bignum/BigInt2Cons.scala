@@ -16,7 +16,7 @@ object BigInt2ConsTest extends Properties("BigInt Constructor") with Generators 
   }
 
   property("BigInt2(Long)") = forAll { (a: Long) =>
-    BigInt2(a).longValue == a
+    BigInt2(a).toString == a.toString
   }
 
 }
