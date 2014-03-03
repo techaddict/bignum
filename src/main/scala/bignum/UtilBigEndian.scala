@@ -19,23 +19,23 @@ object UtilBigEndian {
   }
 
   final def inplaceMultArrays(res: Array[Int], a: Array[Int], b: Array[Int]) {
-    val aLen = a.size
-    val bLen = b.size
+    val aLen = a.length
+    val bLen = b.length
     if (!(aLen == 0 || bLen == 0))
       if (aLen == 1) res(bLen) = multiplyByInt(res, b, bLen, a(0))
       else if (bLen == 1) res(aLen) = multiplyByInt(res, a, aLen, b(0))
       else {
         @tailrec def loop(pos: Int) {
-          if (pos < a.size) {
+          if (pos < a.length) {
             @tailrec def loopj(posj: Int, carry: Long): Int = {
-              if (posj < b.size) {
+              if (posj < b.length) {
                 var tcarry = unsignedMultAddAdd(a(pos), b(posj), res(pos + posj), carry.toInt)
                 res(pos + posj) = tcarry.toInt
                 loopj(posj + 1, tcarry >>> 32)
               }
               else carry.toInt
             }
-            res(pos + b.size) = loopj(0, 0L)
+            res(pos + b.length) = loopj(0, 0L)
             loop(pos + 1)
           }
         }

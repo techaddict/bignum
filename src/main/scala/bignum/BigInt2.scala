@@ -641,7 +641,7 @@ object BigInt2 {
     val upperInt: Int = highBitsToInt(newNum)
     if (upperInt != 0)
       // We need an array with 2 elements
-      new BigInt2(newSign, Array(newNum.toInt, upperInt))
+      new BigInt2(newSign, Array(upperInt, newNum.toInt))
     else
       // We need an array with 1 element
       new BigInt2(newSign, Array(newNum.toInt))
