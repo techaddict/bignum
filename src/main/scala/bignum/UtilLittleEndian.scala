@@ -23,18 +23,8 @@ object UtilLittleEndian {
           else pos
         }
         val pos = rec(0)
-        if ((pos < intCount) || ((count >0) && ((source.digits(pos) << (32 - count)) != 0))) {
-          @tailrec def rec1(pos: Int): Int = {
-            if (pos < intCount && source.digits(pos) == -1){
-              res(pos + 1) = 0
-              rec1(pos + 1)
-            }
-            else pos
-          }
-          val i = rec1(0)
-          if (i == resLen) resLen += 1
-          res(i) += 1
-        }
+        if ((pos < intCount) || ((count >0) && ((source.digits(pos) << (32 - count)) != 0)))
+          res(0) += 1
       }
       BigInt2(source.sign, removeLeadingZeroes(res.reverse))
     }
