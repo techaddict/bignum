@@ -41,19 +41,9 @@ object UtilLittleEndian {
   }
 
   def shiftRight(res: Array[Int], resLen: Int, source: Array[Int],
-    intCount: Int, count: Int): Boolean = {
-    @tailrec def compute(pos: Int): Boolean = {
-      if (pos < intCount)
-        if (source(pos) == 0)
-          compute(pos + 1)
-        else
-          false
-      else
-        true
-    }
+    intCount: Int, count: Int) {
     if (count == 0) {
       scala.compat.Platform.arraycopy(source, intCount, res, 0, resLen)
-      compute(0)
     }
     else {
       val leftShiftCount = 32 - count
@@ -67,7 +57,6 @@ object UtilLittleEndian {
       }
       val i = compute1(0)
       res(i) = (source(i + intCount) >>> count)
-      compute(0) & (source(intCount) << leftShiftCount) == 0
     }
   }
 

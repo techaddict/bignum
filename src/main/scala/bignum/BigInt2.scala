@@ -186,7 +186,7 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
     if ((n == 0) || (sign == 0))
       this
     else if (n > 0)
-      shiftLeft(this.signum, this.mag, n)
+      shiftLeft(this, n)
     else
       shiftRight(new BigInt2(this.signum, this.digits.reverse), -n)
 
@@ -196,7 +196,7 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
     else if (n > 0)
       shiftRight(new BigInt2(this.signum, this.digits.reverse), n)
     else
-      shiftLeft(this.signum, this.mag, -n)
+      shiftLeft(this, -n)
 
   def testBit(n: Int): Boolean = {
     if (n < 0)
@@ -709,79 +709,7 @@ object BigInt2 {
     compute(src.length - 1, 0L)
   }
 
-  private[bignum] def divide(quot: Array[Int], a: Array[Int], b: Array[Int]): Array[Int] = {
-    val aLen = a.length
-    val bLen = b.length
-    val normA = new Array[Int](aLen + 1)
-    val normB = new Array[Int](bLen + 1)
-    val divisorShift = Integer.numberOfLeadingZeros(b(bLen - 1))
-    if (divisorShift != 0) {
-      //shiftLeft(normB, b, 0, divisorShift)
-      //shiftLeft(normA, a, 0, divisorShift)
-    }
-    else {
-      scala.compat.Platform.arraycopy(a, 0, normA, 0, aLen)
-      scala.compat.Platform.arraycopy(b, 0, normB, 0, bLen)
-    }
-    val firstDivisorDigit = normB(bLen - 1)
-    var i = quot.length -1
-    var j = aLen
-    while (i >= 0) {
-      var guessDigit = 0
-      if (normA(j) == firstDivisorDigit)
-        guessDigit = -1
-      else {
-        val product = (((normA(j).unsignedToLong) << 32) + (normA(j - 1).unsignedToLong))
-        val res = divideLongByInt(product, firstDivisorDigit)
-        guessDigit = res.toInt
-        var rem = (res >> 32).toInt
-        if (guessDigit != 0) {
-          guessDigit += 1
-          @tailrec def compute(rOverflowed: Boolean, leftHand: Long, rightHand: Long) {
-            guessDigit -= 1
-            if (!rOverflowed){
-              val left = (guessDigit.unsignedToLong) * (normB(bLen - 2).unsignedToLong)
-              val right = ((rem.toLong << 32) + (normA(j - 2).unsignedToLong))
-              val longR = (rem.unsignedToLong) + (firstDivisorDigit.unsignedToLong)
-              if (Integer.numberOfLeadingZeros((longR >>> 32).toInt) < 32)
-                if ((leftHand ^ 0x8000000000000000L) > (rightHand ^ 0x8000000000000000L))
-                  compute(true, left, right)
-              else{
-                rem = longR.toInt
-                if ((leftHand ^ 0x8000000000000000L) > (rightHand ^ 0x8000000000000000L))
-                  compute(false, left, right)
-              }
-            }
-          }
-          compute(false, 0L, 0L)
-        }
-        if (guessDigit != 0) {
-          val borrow = multiplyAndSubtract(normA, j - bLen, normB, guessDigit)
-          if (borrow != 0) {
-            guessDigit -= 1
-            var carry = 0L
-            for (k <- 0 until bLen) {
-              carry += (normA(j - bLen + k).unsignedToLong) + (normB(k).unsignedToLong)
-              normA(j - bLen + k) = carry.toInt
-              carry >>>= 32
-            }
-          }
-        }
-        if (quot != null)
-          quot(i) = guessDigit
-        j -= 1
-        i -= 1
-      }
-    }
-    if (divisorShift != 0) {
-      shiftRight(normB, bLen, normA, 0, divisorShift)
-      normB
-    }
-    else {
-      scala.compat.Platform.arraycopy(normA, 0, normB, 0, bLen)
-      normA
-    }
-  }
+  private[bignum] def divide(quot: Array[Int], a: Array[Int], b: Array[Int]): Array[Int] = ???
 
   private[this] def divideLongByInt(a: Long, bInt: Int): Long = {
     val b = bInt.unsignedToLong
