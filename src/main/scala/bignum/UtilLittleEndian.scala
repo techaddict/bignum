@@ -10,10 +10,10 @@ object UtilLittleEndian {
   def shiftRight(source: BigInt2, count1: Int): BigInt2 = {
     val intCount = count1 >> 5
     val count = count1 & 31
-    if (intCount >= source.digits.size)
+    if (intCount >= source.digits.length)
       if (source.sign < 0) minusOne else zero
     else {
-      var resLen = source.digits.size - intCount
+      var resLen = source.digits.length - intCount
       val res = new Array[Int](resLen + 1)
       shiftRight(res, resLen, source.digits, intCount, count)
       if (source.sign < 0) {
@@ -78,11 +78,11 @@ object UtilLittleEndian {
     // the remaining Part
     val count = count1 & 31
     // if the remaining Part is not 0 reslength + 1
-    val resLength = source.digits.size + intCount + (if (count == 0) 0 else 1)
+    val resLength = source.digits.length + intCount + (if (count == 0) 0 else 1)
     val res = new Array[Int](resLength)
     // All the work is done here
     if (count == 0)
-      scala.compat.Platform.arraycopy(source.digits, 0, res, intCount, res.size - intCount)
+      scala.compat.Platform.arraycopy(source.digits, 0, res, intCount, res.length - intCount)
     else {
       @tailrec def compute(pos: Int) {
         if (pos > intCount) {
@@ -91,7 +91,7 @@ object UtilLittleEndian {
           compute(pos - 1)
         }
       }
-      compute(res.size - 1)
+      compute(res.length - 1)
     }
     BigInt2(source.sign, removeLeadingZeroes(res.reverse))
   }

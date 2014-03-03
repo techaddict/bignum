@@ -99,7 +99,7 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
     else if (that.isOne)
       this
     else if ((xlen < KaratsubaThreshold) || (ylen < KaratsubaThreshold)) {
-      val resLength = this.digits.size + that.digits.size
+      val resLength = this.digits.length + that.digits.length
       val resSign = if (this.sign != that.sign) -1 else 1
       val resDigits = new Array[Int](resLength)
       inplaceMultArrays(resDigits, this.digits.reverse, that.digits.reverse)
@@ -120,8 +120,8 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
       return (if (divisor.sign > 0) this else -this)
     val divisorSign = divisor.sign
     val thisSign = sign
-    val thisLen = digits.size
-    val divisorLen = divisor.digits.size
+    val thisLen = digits.length
+    val divisorLen = divisor.digits.length
     if (thisLen + divisorLen == 2) {
       val value = (if (thisSign != divisorSign) -1 else 1) *
         (digits(0).unsignedToLong) / (divisor.digits(0).unsignedToLong)
@@ -203,7 +203,7 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
       throw new IllegalArgumentException("Negative Bit for Testing")
     else if (this.isZero) false
     else if (n == 0)
-      if (this.digits.size > 0) (this.digits(0).unsignedToLong & 1L) != 0
+      if (this.digits.length > 0) (this.digits(0).unsignedToLong & 1L) != 0
       else false
     // For Positive
     else if (this.signum > 0) {
@@ -241,10 +241,10 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
   def &~(that: BigInt2): BigInt2 = ???
 
   private[this] def equalsArrays(a: Array[Int]): Boolean =
-    if (a.size != digits.size)
+    if (a.length != digits.length)
       false
     else {
-      var i = digits.size - 1
+      var i = digits.length - 1
       while ((i >= 0) && (digits(i) == a(i)))
         i -= 1
       (i < 0)
@@ -556,9 +556,9 @@ object BigInt2 {
     val a = a1.dropWhile(_ == '0')
     if (a != "") {
       // Doesn't Handle +123
-      val sign = if (a.size > 0 && a(0) == '-') -1 else 1
+      val sign = if (a.length > 0 && a(0) == '-') -1 else 1
       val startChar = if (sign == -1) 1 else 0
-      val stringLength = a.size + (if (sign == -1) -1 else 0)
+      val stringLength = a.length + (if (sign == -1) -1 else 0)
 
       val charsPerInt = BigInt2.digitFitInInt(radix)
       val topChars = stringLength % charsPerInt
@@ -567,7 +567,7 @@ object BigInt2 {
       val bigRadix = BigInt2.bigRadices(radix - 2)
 
       def init(ind: Int, substrStart: Int, substrEnd: Int): Int = {
-        if (substrStart < a.size) {
+        if (substrStart < a.length) {
           val bigRadixDigit = Integer.parseInt(a.substring(substrStart, substrEnd), radix)
           if (bigRadixDigit < 0)
             throw new NumberFormatException("Illegal Digit")
@@ -654,18 +654,18 @@ object BigInt2 {
       zero
     else {
       val digits = new Array[Int]((num + 31) >> 5)
-      for (i <- 0 until digits.size)
+      for (i <- 0 until digits.length)
         digits(i) = rnd.nextInt()
-      digits(digits.size - 1) >>>= (-num) & 31
+      digits(digits.length - 1) >>>= (-num) & 31
       BigInt2(1, removeLeadingZeroes(digits))
     }
 
   private[bignum] def toDecimalScaledString(bi: BigInt2, scale: Int): String = {
     val digits = bi.digits
-    val result = new Array[Char](digits.size * 10 + 9)
+    val result = new Array[Char](digits.length * 10 + 9)
     var x = BigInt(0)
-    for (i <- digits.size - 1 to 0 by -1)
-      x += BigInt(digits(i).unsignedToLong) << (32 * (digits.size - 1 - i))
+    for (i <- digits.length - 1 to 0 by -1)
+      x += BigInt(digits(i).unsignedToLong) << (32 * (digits.length - 1 - i))
     if (bi.sign == -1) "-" + x.toString
     else x.toString
   }
@@ -706,12 +706,12 @@ object BigInt2 {
       }
       else trem.toInt
     }
-    compute(src.size - 1, 0L)
+    compute(src.length - 1, 0L)
   }
 
   private[bignum] def divide(quot: Array[Int], a: Array[Int], b: Array[Int]): Array[Int] = {
-    val aLen = a.size
-    val bLen = b.size
+    val aLen = a.length
+    val bLen = b.length
     val normA = new Array[Int](aLen + 1)
     val normB = new Array[Int](bLen + 1)
     val divisorShift = Integer.numberOfLeadingZeros(b(bLen - 1))
@@ -724,7 +724,7 @@ object BigInt2 {
       scala.compat.Platform.arraycopy(b, 0, normB, 0, bLen)
     }
     val firstDivisorDigit = normB(bLen - 1)
-    var i = quot.size -1
+    var i = quot.length -1
     var j = aLen
     while (i >= 0) {
       var guessDigit = 0
@@ -809,7 +809,7 @@ object BigInt2 {
   }
 
   private[this] def multiplyAndSubtract(a: Array[Int], start: Int, b: Array[Int], c: Int) = {
-    val bLen = b.size - 1
+    val bLen = b.length - 1
     @tailrec def compute(pos: Int, carry0: Long, carry1: Long): Long = {
       if (pos < bLen) {
         val tcarry0 = unsignedMultAddAdd(b(pos), c, carry0.toInt, 0)
