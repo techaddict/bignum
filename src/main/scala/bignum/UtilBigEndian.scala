@@ -7,15 +7,15 @@ object UtilBigEndian {
 
   //Little Endian's
   final def inplaceAdd(a: Array[Int], aSize: Int, addend: Int): Int = {
-    @tailrec def compute(pos: Int, carry: Long): Int = {
+    @tailrec def compute6(pos: Int, carry: Long): Int = {
       if (pos < aSize && carry != 0) {
         val tcarry = carry + (a(pos).unsignedToLong)
         a(pos) = tcarry.toInt
-        compute(pos + 1, tcarry >>> 32)
+        compute6(pos + 1, tcarry >>> 32)
       }
       else carry.toInt
     }
-    compute(0, addend.unsignedToLong)
+    compute6(0, addend.unsignedToLong)
   }
 
   final def inplaceMultArrays(res: Array[Int], a: Array[Int], b: Array[Int]) {
@@ -47,15 +47,15 @@ object UtilBigEndian {
     multiplyByInt(a, a, aSize, factor)
 
   final def multiplyByInt(res: Array[Int], a: Array[Int], aSize: Int, factor: Int): Int = {
-    @tailrec def compute(pos: Int, carry: Long): Int = {
+    @tailrec def compute5(pos: Int, carry: Long): Int = {
       if (pos < aSize) {
         val tcarry = unsignedMultAddAdd(a(pos), factor, carry.toInt, 0)
         res(pos) = tcarry.toInt
-        compute(pos + 1, tcarry >>> 32)
+        compute5(pos + 1, tcarry >>> 32)
       }
       else carry.toInt
     }
-    compute(0, 0L)
+    compute5(0, 0L)
   }
 
   // Caller has to make sure Positive Only

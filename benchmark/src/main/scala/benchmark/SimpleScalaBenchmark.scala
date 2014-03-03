@@ -1,4 +1,4 @@
-package bignum
+package bignum.benchmark
 
 import com.google.caliper.SimpleBenchmark
 

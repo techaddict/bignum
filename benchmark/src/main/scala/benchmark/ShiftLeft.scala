@@ -1,7 +1,8 @@
-package bignum
+package bignum.benchmark
 
 import com.google.caliper.Param
 import com.google.caliper.{Runner => CaliperRunner}
+import bignum.BigInt2
 
 object ShiftBenchmark {
   def main(args: Array[String]) {

@@ -186,7 +186,7 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
     if ((n == 0) || (sign == 0))
       this
     else if (n > 0)
-      shiftLeft(new BigInt2(this.signum, this.digits.reverse), n)
+      shiftLeft(this.signum, this.mag, n)
     else
       shiftRight(new BigInt2(this.signum, this.digits.reverse), -n)
 
@@ -196,7 +196,7 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
     else if (n > 0)
       shiftRight(new BigInt2(this.signum, this.digits.reverse), n)
     else
-      shiftLeft(new BigInt2(this.signum, this.digits.reverse), -n)
+      shiftLeft(this.signum, this.mag, -n)
 
   def testBit(n: Int): Boolean = {
     if (n < 0)

@@ -1,8 +1,9 @@
-package bignum
+package bignum.benchmark
 
 import com.google.caliper.Param
 import com.google.caliper.{Runner => CaliperRunner}
 import org.apfloat.Apint
+import bignum.BigInt2
 
 import annotation.tailrec
 
