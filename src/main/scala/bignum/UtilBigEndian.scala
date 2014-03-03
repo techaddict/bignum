@@ -77,6 +77,33 @@ object UtilBigEndian {
     (a.unsignedToLong) * (b.unsignedToLong) + (c.unsignedToLong) + (d.unsignedToLong)
 
   //BigEndian's
+  /** Shift Left the array digits by count1 bits */
+  def shiftLeft(sign: Int, digits: Array[Int], count1: Int): BigInt2 = {
+    // We don't to shift one by one :)
+    // First Shift in Multiples of 32, then in last
+    val intCount = count1 >> 5
+    // the remaining Part
+    val count = count1 & 31
+    // if the remaining Part is not 0 reslength + 1
+    val resLength = digits.length + intCount + (if (count == 0) 0 else 1)
+    val res = new Array[Int](resLength)
+    // All the work is done here
+    if (count == 0)
+      scala.compat.Platform.arraycopy(digits, 0, res, 0, res.length - intCount)
+    else {
+      @tailrec def compute(pos: Int) {
+        if (pos > intCount) {
+          val p = digits.length - pos + intCount
+          res(res.length - 1 - pos) |= (digits(p) >>> (32 - count))
+          res(res.length - pos) = digits(p) << count
+          compute(pos - 1)
+        }
+      }
+      compute(res.length - 1)
+    }
+    new BigInt2(sign, removeLeadingZeroes(res))
+  }
+
   /** Returns the original array if unchanged. */
   final def removeLeadingZeroes(arr: Array[Int]): Array[Int] = {
     var i = 0
