@@ -5,52 +5,49 @@ import UtilCommon._
 import BigInt2._
 
 object UtilBigEndian {
-  def shiftRight(source: BigInt2, count1: Int): BigInt2 = {
+  def shiftRight(a: BigInt2, count1: Int): BigInt2 = {
     val intCount = count1 >> 5
     val count = count1 & 31
-    if (intCount >= source.digits.length)
-      if (source.sign < 0) minusOne else zero
+    if (intCount >= a.digits.length)
+      if (a.sign < 0) minusOne else zero
     else {
-      var resLen = source.digits.length - intCount
-      val res = shiftRight(resLen, source.digits, intCount, count)
-      if (source.sign < 0) {
+      var resLen = a.digits.length - intCount
+      val res =
+        if (count == 0) {
+          val res = new Array[Int](resLen)
+          scala.compat.Platform.arraycopy(a.digits, 0, res, 0, resLen)
+          res
+        }
+        else {
+          val res = new Array[Int](resLen + 1)
+          val leftShiftCount = 32 - count
+          @tailrec def compute1(pos: Int): Int = {
+            if (pos > 1) {
+              res(pos) = (a.digits(pos - 1) >>> count) | (a.digits(pos - 2) << leftShiftCount)
+              compute1(pos - 1)
+            }
+            else pos
+          }
+          val i = compute1(res.length - 1)
+          res(i) = (a.digits(i - 1) >>> count)
+          res
+        }
+      if (a.sign < 0) {
+        val value = resLen - 1
         @tailrec def rec(pos: Int): Int = {
-          if (pos < intCount && source.digits(source.digits.length - 1 - pos) == 0)
-            rec(pos + 1)
+          if (pos > value && a.digits(pos) == 0)
+            rec(pos - 1)
           else pos
         }
-        val pos = rec(0)
-        if ((pos < intCount) || ((count >0) && ((source.digits(source.digits.length - 1 - pos) << (32 - count)) != 0)))
+        val pos = rec(a.digits.length - 1)
+        if ((pos > value) || ((count >0) && ((a.digits(pos) << (32 - count)) != 0)))
           res(res.length - 1) += 1
       }
-      BigInt2(source.sign, removeLeadingZeroes(res))
+      BigInt2(a.sign, removeLeadingZeroes(res))
     }
   }
 
-  def shiftRight(resLen: Int, source: Array[Int], intCount: Int, count: Int): Array[Int] = {
-    if (count == 0) {
-      val res = new Array[Int](resLen)
-      scala.compat.Platform.arraycopy(source, 0, res, 0, resLen)
-      res
-    }
-    else {
-      val res = new Array[Int](resLen + 1)
-      val leftShiftCount = 32 - count
-      @tailrec def compute1(pos: Int): Int = {
-        if (pos < resLen -1){
-          res(res.length - 1 - pos) = (source(source.length - 1 - pos - intCount) >>> count) |
-            (source(source.length - 1 - pos - intCount - 1) << leftShiftCount)
-          compute1(pos + 1)
-        }
-        else pos
-      }
-      val i = compute1(0)
-      res(res.length - 1 - i) = (source(source.length - 1 - i - intCount) >>> count)
-      res
-    }
-  }
-
-  /** Shift Left the array a.digits by count1 bits */
+  /** Shift Left the BigInteger a by count1 bits */
   def shiftLeft(a: BigInt2, count1: Int): BigInt2 = {
     // We don't to shift one by one :)
     // First Shift in Multiples of 32, then in last
