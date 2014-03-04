@@ -188,13 +188,13 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
     else if (n > 0)
       shiftLeft(this, n)
     else
-      shiftRight(new BigInt2(this.signum, this.digits.reverse), -n)
+      shiftRight(this, -n)
 
   def >>(n: Int): BigInt2 =
     if ((n == 0) || (sign == 0))
       this
     else if (n > 0)
-      shiftRight(new BigInt2(this.signum, this.digits.reverse), n)
+      shiftRight(this, n)
     else
       shiftLeft(this, -n)
 

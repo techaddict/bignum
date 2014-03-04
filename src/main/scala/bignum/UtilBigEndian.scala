@@ -2,6 +2,7 @@ package bignum
 
 import scala.annotation.tailrec
 import UtilCommon._
+import BigInt2._
 
 object UtilBigEndian {
 
@@ -77,6 +78,52 @@ object UtilBigEndian {
     (a.unsignedToLong) * (b.unsignedToLong) + (c.unsignedToLong) + (d.unsignedToLong)
 
   //BigEndian's
+
+  def shiftRight(source: BigInt2, count1: Int): BigInt2 = {
+    val intCount = count1 >> 5
+    val count = count1 & 31
+    if (intCount >= source.digits.length)
+      if (source.sign < 0) minusOne else zero
+    else {
+      var resLen = source.digits.length - intCount
+      val res = shiftRight(resLen, source.digits, intCount, count)
+      if (source.sign < 0) {
+        @tailrec def rec(pos: Int): Int = {
+          if (pos < intCount && source.digits(source.digits.length - 1 - pos) == 0)
+            rec(pos + 1)
+          else pos
+        }
+        val pos = rec(0)
+        if ((pos < intCount) || ((count >0) && ((source.digits(source.digits.length - 1 - pos) << (32 - count)) != 0)))
+          res(res.length - 1) += 1
+      }
+      BigInt2(source.sign, removeLeadingZeroes(res))
+    }
+  }
+
+  def shiftRight(resLen: Int, source: Array[Int], intCount: Int, count: Int): Array[Int] = {
+    if (count == 0) {
+      val res = new Array[Int](resLen)
+      scala.compat.Platform.arraycopy(source, 0, res, 0, resLen)
+      res
+    }
+    else {
+      val res = new Array[Int](resLen + 1)
+      val leftShiftCount = 32 - count
+      @tailrec def compute1(pos: Int): Int = {
+        if (pos < resLen -1){
+          res(res.length - 1 - pos) = (source(source.length - 1 - pos - intCount) >>> count) |
+            (source(source.length - 1 - pos - intCount - 1) << leftShiftCount)
+          compute1(pos + 1)
+        }
+        else pos
+      }
+      val i = compute1(0)
+      res(res.length - 1 - i) = (source(source.length - 1 - i - intCount) >>> count)
+      res
+    }
+  }
+
   /** Shift Left the array a.digits by count1 bits */
   def shiftLeft(a: BigInt2, count1: Int): BigInt2 = {
     // We don't to shift one by one :)
