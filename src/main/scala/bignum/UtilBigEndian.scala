@@ -66,15 +66,13 @@ object UtilBigEndian {
     else {
       val res = new Array[Int](a.digits.length + intCount + 1)
       @tailrec def compute(pos: Int) {
-        if (pos > intCount) {
-          val p = a.digits.length - pos + intCount
-          val resp = res.length - pos - 1
-          res(resp) |= a.digits(p) >>> (32 - count)
-          res(resp + 1) = a.digits(p) << count
-          compute(pos - 1)
+        if (pos < a.digits.length) {
+          res(pos) |= a.digits(pos) >>> (32 - count)
+          res(pos + 1) = a.digits(pos) << count
+          compute(pos + 1)
         }
       }
-      compute(res.length - 1)
+      compute(0)
       new BigInt2(a.signum, removeLeadingZeroes(res))
     }
   }
