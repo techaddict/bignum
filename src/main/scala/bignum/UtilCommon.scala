@@ -21,6 +21,14 @@ object UtilCommon {
 
   @inline final def highBitsToInt(long: Long) = (long >>> 32).toInt
 
+  @inline final def unsignedMultAddAdd(a: Int, b: Int, c: Int, d: Int): Long =
+    (a.unsignedToLong) * (b.unsignedToLong) + (c.unsignedToLong) + (d.unsignedToLong)
+
+  /**
+    * Returns the bit length of the given integer.
+    */
+  final def bitLengthOf(int: Int) = 32 - (java.lang.Integer numberOfLeadingZeros int)
+
   final val IS64BIT = "64".equals(System.getProperty("sun.arch.data.model"))
 
   /**
