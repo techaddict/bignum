@@ -18,14 +18,11 @@ object UtilLittleEndian {
     compute6(0, addend.unsignedToLong)
   }
 
-  final def multiplyByInt(a: Array[Int], aSize: Int, factor: Int): Int =
-    multiplyByInt(a, a, aSize, factor)
-
-  final def multiplyByInt(res: Array[Int], a: Array[Int], aSize: Int, factor: Int): Int = {
+  final def multiplyByInt(a: Array[Int], aSize: Int, factor: Int): Int = {
     @tailrec def compute5(pos: Int, carry: Long): Int = {
       if (pos < aSize) {
         val tcarry = unsignedMultAddAdd(a(pos), factor, carry.toInt, 0)
-        res(pos) = tcarry.toInt
+        a(pos) = tcarry.toInt
         compute5(pos + 1, tcarry >>> 32)
       }
       else carry.toInt
