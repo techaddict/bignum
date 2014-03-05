@@ -10,7 +10,7 @@ import UtilBigEndian._
 import UtilLittleEndian._
 
 @SerialVersionUID(1L)
-class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
+final class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
   extends ScalaNumber with ScalaNumericConversions with Ordered[BigInt2]
   with Serializable {
 
@@ -32,7 +32,7 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
           arrayPlusArray(this.digits, that.digits)
         else
           arrayPlusArray(that.digits, this.digits)
-      new BigInt2(this.signum, removeLeadingZeroes(resDigits))
+      new BigInt2(this.signum, resDigits)
     }
     // Different signs.
     else {
@@ -47,7 +47,7 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
         val resSign =
           if (cmp == this.signum) 1
           else -1
-        BigInt2(resSign, removeLeadingZeroes(resDigits))
+        BigInt2(resSign, resDigits)
       }
       // Same value, different sign:
       else BigInt2.zero
@@ -67,7 +67,7 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
           arrayPlusArray(this.digits, that.digits)
         else
           arrayPlusArray(that.digits, this.digits)
-      new BigInt2(this.signum, removeLeadingZeroes(resultArr))
+      new BigInt2(this.signum, resultArr)
     }
     // Same signs.
     // Compare arrays:
@@ -82,7 +82,7 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
         val resSign =
           if (result == this.signum) 1
           else -1
-        new BigInt2(resSign, removeLeadingZeroes(resArr))
+        new BigInt2(resSign, resArr)
       }
       // Same value, Same sign:
       else BigInt2.zero
