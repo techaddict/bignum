@@ -104,8 +104,8 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
       val resLength = this.digits.length + that.digits.length
       val resSign = if (this.sign != that.sign) -1 else 1
       val resDigits = new Array[Int](resLength)
-      inplaceMultArrays(resDigits, this.digits.reverse, that.digits.reverse)
-      BigInt2(resSign, removeLeadingZeroes(resDigits.reverse))
+      inplaceMultArrays1(resDigits, this.digits, that.digits)
+      BigInt2(resSign, removeLeadingZeroes(resDigits))
     }
     else if ((xlen < ToomCookThreshold) && (ylen < ToomCookThreshold))
       return multiplyKaratsuba(this, that);

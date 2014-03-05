@@ -74,6 +74,43 @@ object UtilBigEndian {
     }
   }
 
+  final def inplaceMultArrays1(res: Array[Int], a: Array[Int], b: Array[Int]) {
+    val aLen = a.length
+    val bLen = b.length
+    if (!(aLen == 0 || bLen == 0))
+      if (aLen == 1) res(0) = multiplyByInt1(res, b, bLen, a(0))
+      else if (bLen == 1) res(0) = multiplyByInt1(res, a, aLen, b(0))
+      else {
+        @tailrec def loop(pos: Int) {
+          if (pos >= 0) {
+            @tailrec def loopj(posj: Int, carry: Long): Int = {
+              if (posj >= 0) {
+                var tcarry = unsignedMultAddAdd(a(pos), b(posj), res(pos + posj + 1), carry.toInt)
+                res(pos + posj + 1) = tcarry.toInt
+                loopj(posj - 1, tcarry >>> 32)
+              }
+              else carry.toInt
+            }
+            res(pos) = loopj(b.length - 1, 0L)
+            loop(pos - 1)
+          }
+        }
+        loop(a.length - 1)
+      }
+  }
+
+  final def multiplyByInt1(res: Array[Int], a: Array[Int], aSize: Int, factor: Int): Int = {
+    @tailrec def compute5(pos: Int, carry: Long): Int = {
+      if (pos >= 0) {
+        val tcarry = unsignedMultAddAdd(a(pos), factor, carry.toInt, 0)
+        res(pos + 1) = tcarry.toInt
+        compute5(pos - 1, tcarry >>> 32)
+      }
+      else carry.toInt
+    }
+    compute5(aSize - 1, 0L)
+  }
+
   /** Returns the original array if unchanged. */
   final def removeLeadingZeroes(arr: Array[Int]): Array[Int] = {
     var i = 0
