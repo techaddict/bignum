@@ -104,7 +104,7 @@ class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
       val resLength = this.digits.length + that.digits.length
       val resSign = if (this.sign != that.sign) -1 else 1
       val resDigits = new Array[Int](resLength)
-      inplaceMultArrays1(resDigits, this.digits, that.digits)
+      inplaceMultArrays(resDigits, this.digits, that.digits)
       BigInt2(resSign, removeLeadingZeroes(resDigits))
     }
     else if ((xlen < ToomCookThreshold) && (ylen < ToomCookThreshold))
@@ -1186,22 +1186,22 @@ object BigInt2 {
       val digits = new Array[Int](bigRadixDigitsLength)
       val bigRadix = BigInt2.bigRadices(radix - 2)
 
-      def init(ind: Int, substrStart: Int, substrEnd: Int): Int = {
+      @tailrec def init(ind: Int, substrStart: Int, substrEnd: Int) {
         if (substrStart < a.length) {
           val bigRadixDigit = Integer.parseInt(a.substring(substrStart, substrEnd), radix)
           if (bigRadixDigit < 0)
             throw new NumberFormatException("Illegal Digit")
           // digits * bigRadix + bigRadixDigit
-          val newDigit = multiplyByInt(digits, ind, bigRadix)
-          digits(ind) = newDigit + inplaceAdd(digits, ind, bigRadixDigit)
-          init(ind + 1, substrEnd, substrEnd + charsPerInt)
+          // Mix these two
+          val len = digits.length - 1 - ind
+          val newDigit = inplaceMultiplyByInt(digits, len, bigRadix)
+          digits(ind) = newDigit + inplaceAdd(digits, len, bigRadixDigit)
+          init(ind - 1, substrEnd, substrEnd + charsPerInt)
         }
-        else
-          ind
       }
       val substrEnd = startChar + (if (topChars == 0) charsPerInt else topChars)
-      init(0, startChar, substrEnd)
-      new BigInt2(sign, removeLeadingZeroes(digits.reverse))
+      init(digits.length - 1, startChar, substrEnd)
+      new BigInt2(sign, removeLeadingZeroes(digits))
     }
     else zero
   }

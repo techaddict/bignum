@@ -74,11 +74,11 @@ object UtilBigEndian {
     }
   }
 
-  final def inplaceMultArrays1(res: Array[Int], a: Array[Int], b: Array[Int]) {
+  final def inplaceMultArrays(res: Array[Int], a: Array[Int], b: Array[Int]) {
     val aLen = a.length
     val bLen = b.length
-    if (aLen == 1) res(0) = multiplyByInt1(res, b, bLen, a(0))
-    else if (bLen == 1) res(0) = multiplyByInt1(res, a, aLen, b(0))
+    if (aLen == 1) res(0) = multiplyByInt(res, b, a(0))
+    else if (bLen == 1) res(0) = multiplyByInt(res, a, b(0))
     else {
       @tailrec def loop(pos: Int) {
         if (pos >= 0) {
@@ -98,7 +98,7 @@ object UtilBigEndian {
     }
   }
 
-  final def multiplyByInt1(res: Array[Int], a: Array[Int], aSize: Int, factor: Int): Int = {
+  final def multiplyByInt(res: Array[Int], a: Array[Int], factor: Int): Int = {
     @tailrec def compute5(pos: Int, carry: Long): Int = {
       if (pos >= 0) {
         val tcarry = unsignedMultAddAdd(a(pos), factor, carry.toInt, 0)
@@ -107,7 +107,31 @@ object UtilBigEndian {
       }
       else carry.toInt
     }
-    compute5(aSize - 1, 0L)
+    compute5(a.length - 1, 0L)
+  }
+
+  final def inplaceAdd(a: Array[Int], aSize: Int, addend: Int): Int = {
+    @tailrec def compute6(pos: Int, carry: Long): Int = {
+      if (pos > a.length - 1 - aSize && carry != 0) {
+        val tcarry = carry + (a(pos).unsignedToLong)
+        a(pos) = tcarry.toInt
+        compute6(pos - 1, tcarry >>> 32)
+      }
+      else carry.toInt
+    }
+    compute6(a.length - 1, addend.unsignedToLong)
+  }
+
+  final def inplaceMultiplyByInt(a: Array[Int], aSize: Int, factor: Int): Int = {
+    @tailrec def compute5(pos: Int, carry: Long): Int = {
+      if (pos > a.length - 1 - aSize) {
+        val tcarry = unsignedMultAddAdd(a(pos), factor, carry.toInt, 0)
+        a(pos) = tcarry.toInt
+        compute5(pos - 1, tcarry >>> 32)
+      }
+      else carry.toInt
+    }
+    compute5(a.length - 1, 0L)
   }
 
   /** Returns the original array if unchanged. */
