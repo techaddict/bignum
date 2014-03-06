@@ -84,7 +84,8 @@ object UtilBigEndian {
         if (pos >= 0) {
           @tailrec def loopj(posj: Int, carry: Long): Int = {
             if (posj >= 0) {
-              var tcarry = unsignedMultAddAdd(a(pos), b(posj), res(pos + posj + 1), carry.toInt)
+              var tcarry = (a(pos) & 0xFFFFFFFFL) * (b(posj) & 0xFFFFFFFFL) +
+                (res(pos + posj + 1) & 0xFFFFFFFFL) + carry
               res(pos + posj + 1) = tcarry.toInt
               loopj(posj - 1, tcarry >>> 32)
             }
@@ -101,7 +102,7 @@ object UtilBigEndian {
   final def multiplyByInt(res: Array[Int], a: Array[Int], factor: Int): Int = {
     @tailrec def compute5(pos: Int, carry: Long): Int = {
       if (pos >= 0) {
-        val tcarry = unsignedMultAddAdd(a(pos), factor, carry.toInt, 0)
+        val tcarry = (a(pos) & 0xFFFFFFFFL) * (factor & 0xFFFFFFFFL) + carry
         res(pos + 1) = tcarry.toInt
         compute5(pos - 1, tcarry >>> 32)
       }
@@ -125,7 +126,7 @@ object UtilBigEndian {
   final def inplaceMultiplyByInt(a: Array[Int], aSize: Int, factor: Int): Int = {
     @tailrec def compute5(pos: Int, carry: Long): Int = {
       if (pos > a.length - 1 - aSize) {
-        val tcarry = unsignedMultAddAdd(a(pos), factor, carry.toInt, 0)
+        val tcarry = (a(pos) & 0xFFFFFFFFL) * (factor & 0xFFFFFFFFL) + carry
         a(pos) = tcarry.toInt
         compute5(pos - 1, tcarry >>> 32)
       }

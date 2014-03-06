@@ -1360,7 +1360,7 @@ object BigInt2 {
     val bLen = b.length - 1
     @tailrec def compute(pos: Int, carry0: Long, carry1: Long): Long = {
       if (pos < bLen) {
-        val tcarry0 = unsignedMultAddAdd(b(pos), c, carry0.toInt, 0)
+        val tcarry0 = (b(pos) & 0xFFFFFFFFL) * (c & 0xFFFFFFFFL) + carry0
         val tcarry1 = carry1 + (a(start + pos) & 0xFFFFFFFFL) - tcarry0
         a(start + pos) = tcarry1.toInt
         compute(pos + 1, tcarry0 >>> 32, tcarry1 >> 32)

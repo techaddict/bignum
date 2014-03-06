@@ -13,9 +13,6 @@ object UtilCommon {
 
   @inline final def highBitsToInt(long: Long) = (long >>> 32).toInt
 
-  @inline final def unsignedMultAddAdd(a: Int, b: Int, c: Int, d: Int): Long =
-    (a & 0xFFFFFFFFL) * (b & 0xFFFFFFFFL) + (c & 0xFFFFFFFFL) + (d & 0xFFFFFFFFL)
-
   /**
     * Returns the bit length of the given integer.
     */
