@@ -113,13 +113,13 @@ object UtilBigEndian {
   final def inplaceAdd(a: Array[Int], aSize: Int, addend: Int): Int = {
     @tailrec def compute6(pos: Int, carry: Long): Int = {
       if (pos > a.length - 1 - aSize && carry != 0) {
-        val tcarry = carry + (a(pos).unsignedToLong)
+        val tcarry = carry + (a(pos) & 0xFFFFFFFFL)
         a(pos) = tcarry.toInt
         compute6(pos - 1, tcarry >>> 32)
       }
       else carry.toInt
     }
-    compute6(a.length - 1, addend.unsignedToLong)
+    compute6(a.length - 1, addend & 0xFFFFFFFFL)
   }
 
   final def inplaceMultiplyByInt(a: Array[Int], aSize: Int, factor: Int): Int = {
@@ -191,7 +191,7 @@ object UtilBigEndian {
       val av = an(i)
       val bv = bn(i)
       if (av != bv)
-        return if (av.unsignedToLong < bv.unsignedToLong) -1 else 1
+        return if ((av & 0xFFFFFFFFL) < (bv & 0xFFFFFFFFL)) -1 else 1
       i += 1
     }
 
@@ -199,12 +199,12 @@ object UtilBigEndian {
   }
 
   /*final def inplaceAdd(a: Array[Int], aSize: Int, addend: Int) = {
-    var carry: Long = addend.unsignedToLong
+    var carry: Long = addend & 0xFFFFFFFFL
 
     var i = a.length - 1
     val aStop = a.length - aSize // ???
     while ((carry != 0) && (i >= aStop)) { // ???
-      carry += a(i).unsignedToLong
+      carry += a(i) & 0xFFFFFFFFL
       a(i) = carry.toInt
       carry >>= 32
 
@@ -231,7 +231,7 @@ object UtilBigEndian {
     var i = slen - 1
     while (i >= 0) {
       val idx = diff + i
-      sum = large(idx).unsignedToLong + small(i).unsignedToLong + sum
+      sum = (large(idx) & 0xFFFFFFFFL) + (small(i) & 0xFFFFFFFFL) + sum
       result(idx) = sum.toInt
       sum = sum >>> 32
       i -= 1
@@ -239,7 +239,7 @@ object UtilBigEndian {
 
     var j = diff - 1
     while (sum != 0 && j >= 0) {
-      sum = large(j).unsignedToLong + sum
+      sum = (large(j) & 0xFFFFFFFFL) + sum
       result(j) = sum.toInt
       sum = sum >>> 32
       j -= 1
@@ -272,7 +272,7 @@ object UtilBigEndian {
     while (sidx > 0) {
       lidx -= 1
       sidx -= 1
-      diff = large(lidx).unsignedToLong - small(sidx).unsignedToLong + (diff >> 32)
+      diff = (large(lidx) & 0xFFFFFFFFL) - (small(sidx) & 0xFFFFFFFFL) + (diff >> 32)
       result(lidx) = diff.toInt
     }
 

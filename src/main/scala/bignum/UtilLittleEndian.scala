@@ -16,8 +16,8 @@ object UtilLittleEndian {
       // Position in the Integer
       val intPos = pos % 32
       print("ind =" + index + " "+ intPos)
-      println("val ="+((digits(index).unsignedToLong) & (1L << (intPos-1))))
-      if (((digits(index).unsignedToLong) & (1L << (intPos-1))) != 0) true
+      println("val ="+((digits(index) & 0xFFFFFFFFL) & (1L << (intPos-1))))
+      if (((digits(index) & 0xFFFFFFFFL) & (1L << (intPos-1))) != 0) true
       else false
     }
   }

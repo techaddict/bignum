@@ -1,17 +1,9 @@
 package bignum
 
 object UtilCommon {
-  implicit class RicherInt(val uint: Int) extends AnyVal {
-    def unsignedToLong: Long = unsignedIntToLong(uint)
-  }
-
   implicit class RicherLong(val long: Long) extends AnyVal {
     def toUnsignedInt: Int = longToUnsignedInt(long)
   }
-
-  @inline
-  final def unsignedIntToLong(unsignedInt: Int): Long =
-    unsignedInt & UnsignedIntMask
 
   final def longToUnsignedInt(long: Long): Int = {
     if (long < 0L || long > UnsignedIntMask)
@@ -22,7 +14,7 @@ object UtilCommon {
   @inline final def highBitsToInt(long: Long) = (long >>> 32).toInt
 
   @inline final def unsignedMultAddAdd(a: Int, b: Int, c: Int, d: Int): Long =
-    (a.unsignedToLong) * (b.unsignedToLong) + (c.unsignedToLong) + (d.unsignedToLong)
+    (a & 0xFFFFFFFFL) * (b & 0xFFFFFFFFL) + (c & 0xFFFFFFFFL) + (d & 0xFFFFFFFFL)
 
   /**
     * Returns the bit length of the given integer.

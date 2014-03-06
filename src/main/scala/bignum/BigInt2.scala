@@ -205,7 +205,7 @@ final class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
       // Small number algorithm. Everything fits into a long.
       val newSign: Int = if (signum < 0 && (exponent & 1) == 1) -1 else 1
       var result: Long = 1;
-      var baseToPow2: Long = partToSquare.mag(0).unsignedToLong
+      var baseToPow2: Long = partToSquare.mag(0) & 0xFFFFFFFFL
 
       var workingExponent: Int = exponent;
 
@@ -283,8 +283,8 @@ final class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
     */
   def longValue: Long = {
     val value =
-      if (digits.length > 1) ((digits(1).toLong) << 32) | (digits(0).unsignedToLong)
-      else (digits(0).unsignedToLong)
+      if (digits.length > 1) ((digits(1).toLong) << 32) | (digits(0) & 0xFFFFFFFFL)
+      else (digits(0) & 0xFFFFFFFFL)
     if (digits.length < 3) sign * value else -1L
   }
 
@@ -328,7 +328,7 @@ final class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
       throw new IllegalArgumentException("Negative Bit for Testing")
     else if (this.isZero) false
     else if (n == 0)
-      if (this.digits.length > 0) (this.digits(0).unsignedToLong & 1L) != 0
+      if (this.digits.length > 0) (this.digits(0) & 0xFFFFFFFFL & 1L) != 0
       else false
     // For Positive
     else if (this.signum > 0) {
@@ -909,7 +909,7 @@ final class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
 
     while (i >= 0) {
 
-      x = mag(i).unsignedToLong
+      x = mag(i) & 0xFFFFFFFFL
       w = x - borrow;
       if (borrow > x) // Did we make the number go negative?
         borrow = 1L;
@@ -919,7 +919,7 @@ final class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
       // 0xAAAAAAAB is the modular inverse of 3 (mod 2^32). Thus,
       // the effect of this is to divide by 3 (mod 2^32).
       // This is much faster than division on most architectures.
-      q = (w * 0xAAAAAAABL) & UnsignedIntMask
+      q = (w * 0xAAAAAAABL) & 0xFFFFFFFFL
       result(i) = q.toInt
 
       // Now check the borrow. The second check can of course be
@@ -1024,7 +1024,7 @@ final class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
       val len = digits.length
       var i = 0
       while (i < len) {
-        hash = (31 * hash + (digits(i) & UnsignedIntMask)).toInt
+        hash = (31 * hash + (digits(i) & 0xFFFFFFFFL)).toInt
         i += 1
       }
 
@@ -1285,18 +1285,18 @@ object BigInt2 {
     val result = new Array[Char](digits.length * 10 + 9)
     var x = BigInt(0)
     for (i <- digits.length - 1 to 0 by -1)
-      x += BigInt(digits(i).unsignedToLong) << (32 * (digits.length - 1 - i))
+      x += BigInt(digits(i) & 0xFFFFFFFFL) << (32 * (digits.length - 1 - i))
     if (bi.sign == -1) "-" + x.toString
     else x.toString
   }
 
   // Could be broken into divideLongByInt
   private[bignum] def divideArrayByInt(dest: Array[Int], src: Array[Int], divisor: Int): Int = {
-    var b = divisor.unsignedToLong
+    var b = divisor & 0xFFFFFFFFL
     @tailrec def compute(pos: Int, trem: Long): Int = {
       if (pos >= 0) {
         var rem = trem
-        val temp = (rem << 32) | (src(pos).unsignedToLong)
+        val temp = (rem << 32) | (src(pos) & 0xFFFFFFFFL)
         val quot =
           if (temp >= 0) {
             rem = (temp % b)
@@ -1332,7 +1332,7 @@ object BigInt2 {
   private[bignum] def divide(quot: Array[Int], a: Array[Int], b: Array[Int]): Array[Int] = ???
 
   private[this] def divideLongByInt(a: Long, bInt: Int): Long = {
-    val b = bInt.unsignedToLong
+    val b = bInt & 0xFFFFFFFFL
     if (a >= 0)
       ((a % b) << 32) | (a / b)
     else {
@@ -1361,14 +1361,14 @@ object BigInt2 {
     @tailrec def compute(pos: Int, carry0: Long, carry1: Long): Long = {
       if (pos < bLen) {
         val tcarry0 = unsignedMultAddAdd(b(pos), c, carry0.toInt, 0)
-        val tcarry1 = carry1 + (a(start + pos).unsignedToLong) - tcarry0
+        val tcarry1 = carry1 + (a(start + pos) & 0xFFFFFFFFL) - tcarry0
         a(start + pos) = tcarry1.toInt
         compute(pos + 1, tcarry0 >>> 32, tcarry1 >> 32)
       }
       else carry1 - carry0
     }
     val res = compute(0, 0L, 0L)
-    val carry = (a(start + bLen).unsignedToLong) + res
+    val carry = (a(start + bLen) & 0xFFFFFFFFL) + res
     a(start + bLen) = carry.toInt
     (carry >> 32).toInt
   }
