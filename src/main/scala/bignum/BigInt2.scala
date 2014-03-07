@@ -422,7 +422,15 @@ final class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
     * Returns the number of bits in the minimal two's-complement representation of this BigInt,
     * excluding a sign bit.
     */
-  def bitLength: Int = ???
+  def bitLength: Int = {
+    if (isZero) 0
+    else if (signum < 0) {
+      val elem = digits(0) + (if (firstNonZeroElem == digits.length - 1) -1 else 0)
+      digits.length * 32 - Integer.numberOfLeadingZeros(elem)
+    }
+    else
+      digits.length * 32 - Integer.numberOfLeadingZeros(digits(0))
+  }
 
   /**
     * Returns the number of bits in the two's complement representation of this BigInt

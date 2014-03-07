@@ -59,6 +59,10 @@ object BigInt2OpsTest extends Properties("BigInt Op") with Generators {
     a.signum equals BigInt(a.toString).signum
   }
 
+  property("a.BitLength") = forAll { (a: BigInt2) =>
+    a.bitLength == BigInt(a.toString).bitLength
+  }
+
   property("a.lowestSetBit") = forAll { (a: BigInt2) =>
     a.lowestSetBit == BigInt(a.toString).lowestSetBit
   }
@@ -78,6 +82,11 @@ object BigInt2OpsTest extends Properties("BigInt Op") with Generators {
 
   property("a >> b") = forAll { (a: BigInt2, b: Short) =>
     (a >> b.toInt) equals (BigInt(a.toString) >> b.toInt)
+  }
+
+  property("a.pow(b)") = forAll { (a: BigInt2, b1: Byte) =>
+    val b = b1 & 0xff
+    (a pow b) equals (BigInt(a.toString) pow b)
   }
 
 }

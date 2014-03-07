@@ -16,8 +16,8 @@ BigInt2(value: Long)
   + Addition: `a + b`
   + Subtraction: `a - b`
   + Multiplication: `a * b`
-  + Division: `a / b`
   + Absolute: `a.abs`
+  + Pow `a.pow(Int)`
   + Min: `a min b`
   + Max: `a max b`
   + compare: `a compare b`
@@ -27,6 +27,9 @@ BigInt2(value: Long)
   + Negate: `- a`
   + Left Shift: `a << Int`
   + Right Shift: `a >> Int`
+  + Bit Length: `a.bitLength`
+  + TestBit: `a.testBit(Int)`
+  + Lowest Set Bit: `a.lowestSetBit`
 
 **Benchmark**
 
