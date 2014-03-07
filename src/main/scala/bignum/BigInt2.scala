@@ -440,12 +440,14 @@ final class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
     var i = 0
     var bits = 0
     val len = digits.length
-    while (i < len) {
-      bits += Integer bitCount digits(i)
-      i += 1
-    }
     if (isNegative) {
-      // TODO?
+      i = firstNonZeroElem + 1
+      bits = (i << 5) - Integer.bitCount(-digits(len - i))
+    }
+    i = len - 1 - i
+    while (i >= 0) {
+      bits += Integer bitCount digits(i)
+      i -= 1
     }
     bits
   }

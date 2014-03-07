@@ -63,6 +63,10 @@ object BigInt2OpsTest extends Properties("BigInt Op") with Generators {
     a.bitLength == BigInt(a.toString).bitLength
   }
 
+  property("a.bitCount") = forAll { (a: BigInt2) =>
+    a.bitCount == BigInt(a.toString).bitCount
+  }
+
   property("a.lowestSetBit") = forAll { (a: BigInt2) =>
     a.lowestSetBit == BigInt(a.toString).lowestSetBit
   }
