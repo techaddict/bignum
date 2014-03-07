@@ -59,10 +59,14 @@ object BigInt2OpsTest extends Properties("BigInt Op") with Generators {
     a.signum equals BigInt(a.toString).signum
   }
 
-  /*property("a.testBit") = forAll { (a: BigInt2, b1: Byte) =>
+  property("a.lowestSetBit") = forAll { (a: BigInt2) =>
+    a.lowestSetBit == BigInt(a.toString).lowestSetBit
+  }
+
+  property("a.testBit") = forAll { (a: BigInt2, b1: Byte) =>
     val b: Int = b1 & 0xff
     a.testBit(b) == BigInt(a.toString).testBit(b)
-  }*/
+  }
 
   property("-a") = forAll { (a: BigInt2) =>
     -a equals -BigInt(a.toString)

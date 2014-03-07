@@ -5,6 +5,7 @@ import UtilCommon._
 import BigInt2._
 
 object UtilBigEndian {
+
   def shiftRight(a: BigInt2, count1: Int): BigInt2 = {
     val intCount = count1 >> 5
     val count = count1 & 31

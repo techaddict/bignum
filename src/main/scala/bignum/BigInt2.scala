@@ -327,20 +327,20 @@ final class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
     if (n < 0)
       throw new IllegalArgumentException("Negative Bit for Testing")
     else if (this.isZero) false
-    else if (n == 0)
-      if (this.digits.length > 0) (this.digits(0) & 0xFFFFFFFFL & 1L) != 0
-      else false
-    // For Positive
-    else if (this.signum > 0) {
-      checkBit(digits, n)
-    }
-    // Negative 2's Compliment
     else {
-      // Just one problem is all are one's in binary then diff :P
-      // of form 2^n -1 should be handled separate
-      val res = this.abs + BigInt2.minusOne
-      !checkBit(res.digits, n)
+      (getLittleEndianElem(this, n / 32) & (1 << (n % 32))) != 0
     }
+  }
+
+  /**
+    * Get the the index, which contains first nonZero Element
+    * Little Endian
+    */
+  private[bignum] def firstNonZeroElem: Int = {
+    var pos = digits.length - 1
+    while (pos >= 0 && digits(pos) == 0)
+      pos -= 1
+    digits.length - 1 - pos
   }
 
   def unary_~ : BigInt2 = {
@@ -442,7 +442,14 @@ final class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
     bits
   }
 
-  def lowestSetBit: Int = ???
+  // Get's the lowest Set Bit and if sign is 0 then -1
+  def lowestSetBit: Int = {
+    if (sign == 0) -1
+    else {
+      val i = firstNonZeroElem
+      return ((i << 5) + Integer.numberOfTrailingZeros(digits(digits.length - 1 - i)))
+    }
+  }
 
   /** Returns a BigInteger whose value is {@code (this / val)} using an O(n^2) algorithm from Knuth.
     *
