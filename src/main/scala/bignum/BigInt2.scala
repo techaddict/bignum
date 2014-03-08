@@ -101,10 +101,8 @@ final class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
     else if (that.isOne)
       this
     else if ((xlen < KaratsubaThreshold) || (ylen < KaratsubaThreshold)) {
-      val resLength = this.digits.length + that.digits.length
       val resSign = if (this.sign != that.sign) -1 else 1
-      val resDigits = new Array[Int](resLength)
-      inplaceMultArrays(resDigits, this.digits, that.digits)
+      val resDigits = inplaceMultArrays(this.digits, that.digits)
       BigInt2(resSign, removeLeadingZeroes(resDigits))
     }
     else if ((xlen < ToomCookThreshold) && (ylen < ToomCookThreshold))

@@ -75,11 +75,12 @@ object UtilBigEndian {
     }
   }
 
-  final def inplaceMultArrays(res: Array[Int], a: Array[Int], b: Array[Int]) {
+  final def inplaceMultArrays(a: Array[Int], b: Array[Int]): Array[Int] = {
     val aLen = a.length
     val bLen = b.length
-    if (aLen == 1) res(0) = multiplyByInt(res, b, a(0))
-    else if (bLen == 1) res(0) = multiplyByInt(res, a, b(0))
+    val res = new Array[Int](aLen + bLen)
+    if (aLen == 1) multiplyByInt(res, b, a(0))
+    else if (bLen == 1) multiplyByInt(res, a, b(0))
     else {
       @tailrec def loop(pos: Int) {
         if (pos >= 0) {
@@ -98,16 +99,17 @@ object UtilBigEndian {
       }
       loop(a.length - 1)
     }
+    res
   }
 
-  final def multiplyByInt(res: Array[Int], a: Array[Int], factor: Int): Int = {
-    @tailrec def compute5(pos: Int, carry: Long): Int = {
+  final def multiplyByInt(res: Array[Int], a: Array[Int], factor: Int) {
+    @tailrec def compute5(pos: Int, carry: Long) {
       if (pos >= 0) {
         val tcarry = (a(pos) & 0xFFFFFFFFL) * (factor & 0xFFFFFFFFL) + carry
         res(pos + 1) = tcarry.toInt
         compute5(pos - 1, tcarry >>> 32)
       }
-      else carry.toInt
+      else res(0) = carry.toInt
     }
     compute5(a.length - 1, 0L)
   }
