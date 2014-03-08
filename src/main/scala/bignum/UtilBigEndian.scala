@@ -82,22 +82,20 @@ object UtilBigEndian {
     if (aLen == 1) multiplyByInt(res, b, a(0))
     else if (bLen == 1) multiplyByInt(res, a, b(0))
     else {
-      @tailrec def loop(pos: Int) {
-        if (pos >= 0) {
-          @tailrec def loopj(posj: Int, carry: Long): Int = {
-            if (posj >= 0) {
-              var tcarry = (a(pos) & 0xFFFFFFFFL) * (b(posj) & 0xFFFFFFFFL) +
-                (res(pos + posj + 1) & 0xFFFFFFFFL) + carry
-              res(pos + posj + 1) = tcarry.toInt
-              loopj(posj - 1, tcarry >>> 32)
-            }
-            else carry.toInt
-          }
-          res(pos) = loopj(b.length - 1, 0L)
-          loop(pos - 1)
+      var pos = a.length - 1
+      while (pos >= 0) {
+        var posj = b.length - 1
+        var carry = 0L
+        while (posj >= 0) {
+          carry += (a(pos) & 0xFFFFFFFFL) * (b(posj) & 0xFFFFFFFFL) +
+            (res(pos + posj + 1) & 0xFFFFFFFFL)
+          res(pos + posj + 1) = carry.toInt
+          posj -= 1
+          carry >>>= 32
         }
+        res(pos) = carry.toInt
+        pos -= 1
       }
-      loop(a.length - 1)
     }
     res
   }
