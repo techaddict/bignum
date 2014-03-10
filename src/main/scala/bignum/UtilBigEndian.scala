@@ -22,25 +22,19 @@ object UtilBigEndian {
         else {
           val res = new Array[Int](resLen + 1)
           val leftShiftCount = 32 - count
-          @tailrec def compute1(pos: Int): Int = {
-            if (pos > 1) {
-              res(pos) = (a.digits(pos - 1) >>> count) | (a.digits(pos - 2) << leftShiftCount)
-              compute1(pos - 1)
-            }
-            else pos
+          var pos = res.length - 1
+          while (pos > 1) {
+            res(pos) = (a.digits(pos - 1) >>> count) | (a.digits(pos - 2) << leftShiftCount)
+            pos -= 1
           }
-          val i = compute1(res.length - 1)
-          res(i) = (a.digits(i - 1) >>> count)
+          res(pos) = (a.digits(pos - 1) >>> count)
           res
         }
       if (a.sign < 0) {
         val value = resLen - 1
-        @tailrec def rec(pos: Int): Int = {
-          if (pos > value && a.digits(pos) == 0)
-            rec(pos - 1)
-          else pos
-        }
-        val pos = rec(a.digits.length - 1)
+        var pos = a.digits.length - 1
+        while (pos > value && a.digits(pos) == 0)
+          pos -= 1
         if ((pos > value) || ((count >0) && ((a.digits(pos) << (32 - count)) != 0)))
           res(res.length - 1) += 1
       }
