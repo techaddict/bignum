@@ -93,15 +93,14 @@ object UtilBigEndian {
   }
 
   final def multiplyByInt(res: Array[Int], a: Array[Int], factor: Int) {
-    @tailrec def compute5(pos: Int, carry: Long) {
-      if (pos >= 0) {
-        val tcarry = (a(pos) & 0xFFFFFFFFL) * (factor & 0xFFFFFFFFL) + carry
-        res(pos + 1) = tcarry.toInt
-        compute5(pos - 1, tcarry >>> 32)
-      }
-      else res(0) = carry.toInt
+    var pos = a.length - 1
+    var carry = 0L
+    while (pos >= 0) {
+      val tcarry = (a(pos) & 0xFFFFFFFFL) * (factor & 0xFFFFFFFFL) + carry
+      res(pos + 1) = tcarry.toInt
+      compute5(pos - 1, tcarry >>> 32)
     }
-    compute5(a.length - 1, 0L)
+    res(0) = carry.toInt
   }
 
   final def inplaceAdd(a: Array[Int], aSize: Int, addend: Int): Int = {
