@@ -117,15 +117,16 @@ object UtilBigEndian {
   }
 
   final def inplaceMultiplyByInt(a: Array[Int], aSize: Int, factor: Int): Int = {
-    @tailrec def compute5(pos: Int, carry: Long): Int = {
-      if (pos > a.length - 1 - aSize) {
-        val tcarry = (a(pos) & 0xFFFFFFFFL) * (factor & 0xFFFFFFFFL) + carry
-        a(pos) = tcarry.toInt
-        compute5(pos - 1, tcarry >>> 32)
-      }
-      else carry.toInt
+    var pos = a.length - 1
+    var carry = 0L
+    var cond = a.length - 1 - aSize
+    while (pos > cond) {
+      carry = (a(pos) & 0xFFFFFFFFL) * (factor & 0xFFFFFFFFL) + carry
+      a(pos) = carry.toInt
+      pos -= 1
+      carry >>>= 32
     }
-    compute5(a.length - 1, 0L)
+    carry.toInt
   }
 
   /** Returns the original array if unchanged. */
