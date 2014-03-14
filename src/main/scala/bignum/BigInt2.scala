@@ -1201,21 +1201,22 @@ object BigInt2 {
       val digits = new Array[Int](bigRadixDigitsLength)
       val bigRadix = BigInt2.bigRadices(radix - 2)
 
-      @tailrec def init(ind: Int, substrStart: Int, substrEnd: Int) {
-        if (substrStart < a.length) {
-          val bigRadixDigit = Integer.parseInt(a.substring(substrStart, substrEnd), radix)
-          if (bigRadixDigit < 0)
-            throw new NumberFormatException("Illegal Digit")
-          // digits * bigRadix + bigRadixDigit
-          // Mix these two
-          val len = digits.length - 1 - ind
-          val newDigit = inplaceMultiplyByInt(digits, len, bigRadix)
-          digits(ind) = newDigit + inplaceAdd(digits, len, bigRadixDigit)
-          init(ind - 1, substrEnd, substrEnd + charsPerInt)
-        }
+      var ind = digits.length - 1
+      var substrStart = startChar
+      var substrEnd = startChar + (if (topChars == 0) charsPerInt else topChars)
+      while (substrStart < a.length) {
+        val bigRadixDigit = Integer.parseInt(a.substring(substrStart, substrEnd), radix)
+        if (bigRadixDigit < 0)
+          throw new NumberFormatException("Illegal Digit")
+        // digits * bigRadix + bigRadixDigit
+        // Mix these two
+        val len = digits.length - 1 - ind
+        val newDigit = inplaceMultiplyByInt(digits, len, bigRadix)
+        digits(ind) = newDigit + inplaceAdd(digits, len, bigRadixDigit)
+        ind -= 1
+        substrStart = substrEnd
+        substrEnd += charsPerInt
       }
-      val substrEnd = startChar + (if (topChars == 0) charsPerInt else topChars)
-      init(digits.length - 1, startChar, substrEnd)
       new BigInt2(sign, removeLeadingZeroes(digits))
     }
     else zero
