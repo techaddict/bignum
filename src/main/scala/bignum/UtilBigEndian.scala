@@ -3,6 +3,7 @@ package bignum
 import scala.annotation.tailrec
 import UtilCommon._
 import BigInt2._
+import Trashy._
 
 object UtilBigEndian {
 
@@ -1729,6 +1730,130 @@ object UtilBigEndian {
     }
     scala.compat.Platform.arraycopy(a, a.length - a.length / pieceSize * pieceSize - (a.length % pieceSize), ai(a.length / pieceSize), targetPieceSize - (a.length % pieceSize), a.length % pieceSize)
     return ai
+  }
+
+  def divideAndRemainderByInteger(a: BigInt2, d: Int, sign: Int) = {
+    (zero, zero)
+  }
+
+  def divideAndRemainderKnuthPositive(_a: BigInt2, _b: BigInt2): (BigInt2, BigInt2) = {
+    var a = _a.digits.reverse
+    var b = _b.digits.reverse
+    val aLength = a.length
+    val bLength = b.length
+    val quotLength = aLength - bLength + 1
+    var quot = new Array[Int](quotLength)
+
+    var normA = new Array[Int](aLength + 1) // the normalized dividend
+    // an extra byte is needed for correct shift
+    var normB = new Array[Int](bLength + 1) // the normalized divisor;
+    val normBLength = bLength
+    /*
+     * Step D1: normalize a and b and put the results to a1 and b1 the
+     * normalized divisor's first digit must be >= 2^31
+     */
+    val divisorShift = Integer.numberOfLeadingZeros(b(bLength - 1));
+    if (divisorShift != 0) {
+      shiftLeft1(normB, b, 0, divisorShift)
+      shiftLeft1(normA, a, 0, divisorShift)
+    } else {
+      System.arraycopy(a, 0, normA, 0, aLength)
+      System.arraycopy(b, 0, normB, 0, bLength)
+    }
+    var firstDivisorDigit = normB(normBLength - 1)
+    // Step D2: set the quotient index
+    var i = quotLength - 1
+    var j = aLength
+
+    while (i >= 0) {
+      // Step D3: calculate a guess digit guessDigit
+      var guessDigit = 0;
+      if (normA(j) == firstDivisorDigit) {
+          // set guessDigit to the largest unsigned var value
+          guessDigit = -1
+      } else {
+        var product = (((normA(j) & 0xffffffffL) << 32) + (normA(j - 1) & 0xffffffffL))
+        var res = divideLongByInt(product, firstDivisorDigit)
+        guessDigit = res.toInt // the quotient of divideLongByInt
+        var rem = (res >> 32).toInt // the remainder of
+                                        // divideLongByInt
+        // decrease guessDigit by 1 while leftHand > rightHand
+        if (guessDigit != 0) {
+          var leftHand = 0L
+          var rightHand = 0L
+          var rOverflowed = false
+          var break = false
+          guessDigit += 1 // to have the proper value in the loop
+                          // below
+          do {
+            guessDigit -= 1
+            if (rOverflowed) {
+              break = true
+            }
+            else {
+              // leftHand always fits in an unsigned long
+              leftHand = (guessDigit & 0xffffffffL) *
+                (normB(normBLength - 2) & 0xffffffffL)
+              /*
+               * rightHand can overflow; in this case the loop
+               * condition will be true in the next step of the loop
+               */
+              rightHand = (rem.toLong << 32) +
+                (normA(j - 2) & 0xffffffffL)
+              var longR = (rem & 0xffffffffL) +
+                (firstDivisorDigit & 0xffffffffL);
+              /*
+               * checks that longR does not fit in an unsigned var;
+               * this ensures that rightHand will overflow unsigned
+               * long in the next step
+               */
+              if (Integer.numberOfLeadingZeros((longR >>> 32).toInt) < 32) {
+                rOverflowed = true;
+              } else {
+                rem = longR.toInt
+              }
+            }
+          } while (((leftHand ^ 0x8000000000000000L) > (rightHand ^ 0x8000000000000000L)) && break == false)
+        }
+      }
+      // Step D4: multiply normB by guessDigit and subtract the production
+      // from normA.
+      if (guessDigit != 0) {
+        var borrow = multiplyAndSubtract(normA, j -
+          normBLength, normB, guessDigit)
+        // Step D5: check the borrow
+        if (borrow != 0) {
+          // Step D6: compensating addition
+          guessDigit -= 1
+          var carry = 0L
+          for (k <- 0 until normBLength) {
+            carry += (normA(j - normBLength + k) & 0xffffffffL)
+                    + (normB(k) & 0xffffffffL);
+            normA(j - normBLength + k) = carry.toInt
+            carry >>>= 32;
+          }
+        }
+      }
+      if (quot != null) {
+        quot(i) = guessDigit;
+      }
+      // Step D7
+      j -= 1
+      i -= 1
+    }
+    val quoSign = if (_a.sign == _b.sign) 1 else -1
+    /*
+     * Step D8: we got the remainder in normA. Denormalize it id needed
+     */
+    if (divisorShift != 0) {
+      // reuse normB
+      shiftRight1(normB, normBLength, normA, 0, divisorShift);
+      (new BigInt2(quoSign, removeLeadingZeroes(quot.reverse)), new BigInt2(_a.sign, removeLeadingZeroes(normB.reverse)))
+    }
+    else {
+      System.arraycopy(normA, 0, normB, 0, bLength)
+      (new BigInt2(quoSign, removeLeadingZeroes(quot.reverse)), new BigInt2(_b.sign, removeLeadingZeroes(normA.reverse)))
+    }
   }
 
   /**
