@@ -3,6 +3,7 @@ package bignum
 import scala.annotation.tailrec
 import UtilCommon._
 import BigInt2._
+import Trashy._
 
 object UtilBigEndian {
 
@@ -1729,6 +1730,141 @@ object UtilBigEndian {
     }
     scala.compat.Platform.arraycopy(a, a.length - a.length / pieceSize * pieceSize - (a.length % pieceSize), ai(a.length / pieceSize), targetPieceSize - (a.length % pieceSize), a.length % pieceSize)
     return ai
+  }
+
+  def divideAndRemainderByInteger(a: BigInt2, d: Int, sign: Int) = {
+    (zero, zero)
+  }
+
+  def divideAndRemainderKnuthPositive(_a: BigInt2, _b: BigInt2): (BigInt2, BigInt2) = {
+    var a = _a.digits.reverse
+    var b = _b.digits.reverse
+    val aLength = a.length
+    val bLength = b.length
+    val quotLength = aLength - bLength + 1
+    var quot = new Array[Int](quotLength)
+
+    var normA = new Array[Int](aLength + 1)
+    var normB = new Array[Int](bLength + 1)
+    val normBLength = bLength
+    val divisorShift = Integer.numberOfLeadingZeros(b(bLength - 1));
+    if (divisorShift != 0) {
+      shiftLeft1(normB, b, 0, divisorShift)
+      shiftLeft1(normA, a, 0, divisorShift)
+    } else {
+      System.arraycopy(a, 0, normA, 0, aLength)
+      System.arraycopy(b, 0, normB, 0, bLength)
+    }
+    var firstDivisorDigit = normB(normBLength - 1)
+    var i = quotLength - 1
+    var j = aLength
+
+    while (i >= 0) {
+      var guessDigit = 0;
+      if (normA(j) == firstDivisorDigit) {
+          guessDigit = -1
+      } else {
+        var product = (((normA(j) & 0xffffffffL) << 32) + (normA(j - 1) & 0xffffffffL))
+        var res = divideLongByInt(product, firstDivisorDigit)
+        guessDigit = res.toInt
+        var rem = (res >> 32).toInt
+        if (guessDigit != 0) {
+          var leftHand = 0L
+          var rightHand = 0L
+          var rOverflowed = false
+          var break = false
+          guessDigit += 1
+          do {
+            guessDigit -= 1
+            if (rOverflowed) {
+              break = true
+            }
+            else {
+              leftHand = (guessDigit & 0xffffffffL) *
+                (normB(normBLength - 2) & 0xffffffffL)
+              rightHand = (rem.toLong << 32) +
+                (normA(j - 2) & 0xffffffffL)
+              var longR = (rem & 0xffffffffL) +
+                (firstDivisorDigit & 0xffffffffL);
+              if (Integer.numberOfLeadingZeros((longR >>> 32).toInt) < 32) {
+                rOverflowed = true;
+              } else {
+                rem = longR.toInt
+              }
+            }
+          } while (((leftHand ^ 0x8000000000000000L) > (rightHand ^ 0x8000000000000000L)) && break == false)
+        }
+      }
+      if (guessDigit != 0) {
+        var borrow = multiplyAndSubtract(normA, j -
+          normBLength, normB, guessDigit)
+        if (borrow != 0) {
+          guessDigit -= 1
+          var carry = 0L
+          for (k <- 0 until normBLength) {
+            carry += (normA(j - normBLength + k) & 0xffffffffL)
+                    + (normB(k) & 0xffffffffL);
+            normA(j - normBLength + k) = carry.toInt
+            carry >>>= 32;
+          }
+        }
+      }
+      if (quot != null) {
+        quot(i) = guessDigit;
+      }
+      j -= 1
+      i -= 1
+    }
+    val quoSign = if (_a.sign == _b.sign) 1 else -1
+    if (divisorShift != 0) {
+      shiftRight1(normB, normBLength, normA, 0, divisorShift);
+      (new BigInt2(quoSign, removeLeadingZeroes(quot.reverse)), new BigInt2(_a.sign, removeLeadingZeroes(normB.reverse)))
+    }
+    else {
+      System.arraycopy(normA, 0, normB, 0, bLength)
+      (new BigInt2(quoSign, removeLeadingZeroes(quot.reverse)), new BigInt2(_b.sign, removeLeadingZeroes(normA.reverse)))
+    }
+  }
+
+  final def divideLongByInt(a: Long, bInt: Int): Long = {
+    val b = bInt & 0xFFFFFFFFL
+    if (a >= 0)
+      ((a % b) << 32) | (a / b)
+    else {
+      val aPos = a >>> 1
+      val bPos = b >>> 1
+      var quot: Long = aPos / bPos
+      var rem: Long = ((aPos % bPos) << 1) + (a & 1)
+      if ((b & 1) != 0) {
+        if (quot <= rem)
+          rem -= quot
+        else if (quot - rem <= b) {
+          rem += b - quot
+          quot -= 1
+        }
+        else {
+          rem += (b << 1) - quot
+          quot -= 2
+        }
+      }
+      (rem << 32) | quot
+    }
+  }
+
+  final def multiplyAndSubtract(a: Array[Int], start: Int, b: Array[Int], c: Int) = {
+    var carry0 = 0L
+    var carry1 = 0L
+    var bLen = b.length - 1
+    for (i <- 0 until bLen) {
+      carry0 = ( b(i) & 0xFFFFFFFFL) * (c & 0xFFFFFFFFL) + (carry0 & 0xFFFFFFFFL)
+      carry1 = (a(start+i) & 0xffffffffL) - (carry0 & 0xffffffffL) + carry1;
+      a(start+i) = carry1.toInt
+      carry1 >>=  32; // -1 or 0
+      carry0 >>>= 32;
+    }
+    carry1 = (a(start + bLen) & 0xffffffffL) - carry0 + carry1;
+    a(start + bLen) = carry1.toInt
+    (carry1 >> 32).toInt // -1 or 0
   }
 
   /**

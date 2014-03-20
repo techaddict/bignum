@@ -466,13 +466,32 @@ final class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
     * @throws ArithmeticException if {@code val} is zero.
     * @see MutableBigInteger#divideKnuth(MutableBigInteger, MutableBigInteger, boolean)
     */
-  private[bignum] def divideKnuth(that: BigInt2): BigInt2 = ???
-  private[bignum] def remainderKnuth(that: BigInt2): BigInt2 = ???
-  private[bignum] def divideAndRemainderKnuth(that: BigInt2): (BigInt2, BigInt2) = ???
+  private[bignum] def divideKnuth(that: BigInt2): BigInt2 = divideAndRemainderKnuth(that)._1
+  private[bignum] def remainderKnuth(that: BigInt2): BigInt2 = divideAndRemainderKnuth(that)._2
+  private[bignum] def divideAndRemainderKnuth(that: BigInt2): (BigInt2, BigInt2) = {
+    if (0 == that.sign) {
+      throw new ArithmeticException("BigInt2 divide by zero")
+    }
+    val thatSign = that.sign
+    if (that.isOne) {
+      return ((if (that.sign > 0) this else -this), BigInt2.zero)
+    }
+    val thisSign = sign
+    val thisLen = digits.length
+    val thatLen = that.digits.length
+    if (1 == thatLen) {
+      divideAndRemainderByInteger(this, that.digits(0), thatSign)
+    }
+    val cmp = compareArrays(digits, that.digits)
+    if (cmp == 0)
+      (if (thisSign == thatSign) BigInt2.one else BigInt2.minusOne, BigInt2.zero)
+    else if (cmp < 0) (BigInt2.zero, this)
+    else divideAndRemainderKnuthPositive(this, that)
+  }
 //  {
 //    val a = this.abs
 //    val b = that.abs
-//    val (quot, rem) = a divideAndRemainderKnuth b // <== FIXME
+//    val (quot, rem) = divideAndRemainderKnuthPositive(abs, that.ab) // <== FIXME
 //    val newSignum = if (this.signum == that.signum) 1 else -1
 //    (quot withSignum newSignum, rem withSignum this.signum)
 //  }
@@ -1346,47 +1365,5 @@ object BigInt2 {
   }
 
   private[bignum] def divide(quot: Array[Int], a: Array[Int], b: Array[Int]): Array[Int] = ???
-
-  private[this] def divideLongByInt(a: Long, bInt: Int): Long = {
-    val b = bInt & 0xFFFFFFFFL
-    if (a >= 0)
-      ((a % b) << 32) | (a / b)
-    else {
-      val aPos = a >>> 1
-      val bPos = b >>> 1
-      var quot: Long = aPos / bPos
-      var rem: Long = ((aPos % bPos) << 1) + (a & 1)
-      if ((b & 1) != 0) {
-        if (quot <= rem)
-          rem -= quot
-        else if (quot - rem <= b) {
-          rem += b - quot
-          quot -= 1
-        }
-        else {
-          rem += (b << 1) - quot
-          quot -= 2
-        }
-      }
-      (rem << 32) | quot
-    }
-  }
-
-  private[this] def multiplyAndSubtract(a: Array[Int], start: Int, b: Array[Int], c: Int) = {
-    val bLen = b.length - 1
-    @tailrec def compute(pos: Int, carry0: Long, carry1: Long): Long = {
-      if (pos < bLen) {
-        val tcarry0 = (b(pos) & 0xFFFFFFFFL) * (c & 0xFFFFFFFFL) + carry0
-        val tcarry1 = carry1 + (a(start + pos) & 0xFFFFFFFFL) - tcarry0
-        a(start + pos) = tcarry1.toInt
-        compute(pos + 1, tcarry0 >>> 32, tcarry1 >> 32)
-      }
-      else carry1 - carry0
-    }
-    val res = compute(0, 0L, 0L)
-    val carry = (a(start + bLen) & 0xFFFFFFFFL) + res
-    a(start + bLen) = carry.toInt
-    (carry >> 32).toInt
-  }
 
 }
