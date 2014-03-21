@@ -45,12 +45,16 @@ object BigInt2Laws extends Properties("BigInt Law") with Generators{
     (a + (b + c)) equals ((a + b) + c)
   }
 
-  /*property("a / a == 1)") = forAll { (a: NonZeroBigInt2) =>
-    (a / a).toString == BigInt2.one.toString
-  }*/
+  property("a / a == 1)") = forAll { (a: BigInt2) =>
+    if (!a.isZero)
+      (a / a).toString == BigInt2.one.toString
+    else true
+  }
 
-  /*property("(a * b) / b = a") = forAll { (a: BigInt2, b: NonZeroBigInt2) =>
-    ((a * b) / b).toString == a.toString
-  }*/
+  property("(a * b) / b = a") = forAll { (a: BigInt2, b: BigInt2) =>
+    if (!b.isZero)
+      ((a * b) / b).toString == a.toString
+    else true
+  }
 
 }

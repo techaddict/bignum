@@ -1732,11 +1732,30 @@ object UtilBigEndian {
     return ai
   }
 
-  def divideAndRemainderByInteger(a: BigInt2, d: Int, sign: Int) = {
-    (zero, zero)
+  def divideAndRemainderByInteger(a: BigInt2, divisor: Int, divisorSign: Int) = {
+    val aDigits = a.digits
+    val aLen = a.digits.length
+    val aSign = a.sign
+    if (aLen == 1) {
+      val a = (aDigits(0) & 0xffffffffL)
+      val b = (divisor & 0xffffffffL)
+      var quo = a / b
+      var rem = a % b
+      if (aSign != divisorSign) quo = -quo
+      if (aSign < 0) rem = -rem
+      (BigInt2(quo), BigInt2(rem))
+    } else {
+      val quotientLength = aLen
+      val quotientSign = if (aSign == divisorSign) 1 else -1
+      val quotientDigits = new Array[Int](quotientLength)
+      val remainderDigits = divideArrayByInt(quotientDigits, aDigits, divisor)
+      val result0 = new BigInt2(quotientSign, removeLeadingZeroes(quotientDigits))
+      val result1 = new BigInt2(aSign, Array(remainderDigits))
+      (result0, result1)
+    }
   }
 
-  def divideAndRemainderKnuthPositive(_a: BigInt2, _b: BigInt2): (BigInt2, BigInt2) = {
+  final def divideAndRemainderKnuthPositive(_a: BigInt2, _b: BigInt2): (BigInt2, BigInt2) = {
     var a = _a.digits.reverse
     var b = _b.digits.reverse
     val aLength = a.length
@@ -1764,7 +1783,7 @@ object UtilBigEndian {
       if (normA(j) == firstDivisorDigit) {
           guessDigit = -1
       } else {
-        var product = (((normA(j) & 0xffffffffL) << 32) + (normA(j - 1) & 0xffffffffL))
+        var product = (((normA(j) & 0xFFFFFFFFL) << 32) + (normA(j - 1) & 0xFFFFFFFFL))
         var res = divideLongByInt(product, firstDivisorDigit)
         guessDigit = res.toInt
         var rem = (res >> 32).toInt
@@ -1772,27 +1791,23 @@ object UtilBigEndian {
           var leftHand = 0L
           var rightHand = 0L
           var rOverflowed = false
-          var break = false
           guessDigit += 1
           do {
             guessDigit -= 1
-            if (rOverflowed) {
-              break = true
-            }
-            else {
-              leftHand = (guessDigit & 0xffffffffL) *
-                (normB(normBLength - 2) & 0xffffffffL)
+            if (!rOverflowed) {
+              leftHand = (guessDigit & 0xFFFFFFFFL) *
+                (normB(normBLength - 2) & 0xFFFFFFFFL)
               rightHand = (rem.toLong << 32) +
-                (normA(j - 2) & 0xffffffffL)
-              var longR = (rem & 0xffffffffL) +
-                (firstDivisorDigit & 0xffffffffL);
+                (normA(j - 2) & 0xFFFFFFFFL)
+              var longR = (rem & 0xFFFFFFFFL) +
+                (firstDivisorDigit & 0xFFFFFFFFL)
               if (Integer.numberOfLeadingZeros((longR >>> 32).toInt) < 32) {
                 rOverflowed = true;
               } else {
                 rem = longR.toInt
               }
             }
-          } while (((leftHand ^ 0x8000000000000000L) > (rightHand ^ 0x8000000000000000L)) && break == false)
+          } while (((leftHand ^ 0x8000000000000000L) > (rightHand ^ 0x8000000000000000L)) && rOverflowed == false)
         }
       }
       if (guessDigit != 0) {
@@ -1801,17 +1816,16 @@ object UtilBigEndian {
         if (borrow != 0) {
           guessDigit -= 1
           var carry = 0L
-          for (k <- 0 until normBLength) {
-            carry += (normA(j - normBLength + k) & 0xffffffffL)
-                    + (normB(k) & 0xffffffffL);
+          var k = 0
+          while (k < normBLength) {
+            carry += (normA(j - normBLength + k) & 0xFFFFFFFFL) + (normB(k) & 0xFFFFFFFFL)
             normA(j - normBLength + k) = carry.toInt
-            carry >>>= 32;
+            carry >>>= 32
+            k += 1
           }
         }
       }
-      if (quot != null) {
-        quot(i) = guessDigit;
-      }
+      if (quot != null) quot(i) = guessDigit
       j -= 1
       i -= 1
     }
@@ -1855,17 +1869,57 @@ object UtilBigEndian {
     var carry0 = 0L
     var carry1 = 0L
     var bLen = b.length - 1
-    for (i <- 0 until bLen) {
+    var i = 0
+    while(i < bLen) {
       carry0 = ( b(i) & 0xFFFFFFFFL) * (c & 0xFFFFFFFFL) + (carry0 & 0xFFFFFFFFL)
-      carry1 = (a(start+i) & 0xffffffffL) - (carry0 & 0xffffffffL) + carry1;
+      carry1 = (a(start+i) & 0xFFFFFFFFL) - (carry0 & 0xFFFFFFFFL) + carry1
       a(start+i) = carry1.toInt
-      carry1 >>=  32; // -1 or 0
-      carry0 >>>= 32;
+      carry1 >>=  32 // -1 or 0
+      carry0 >>>= 32
+      i += 1
     }
-    carry1 = (a(start + bLen) & 0xffffffffL) - carry0 + carry1;
+    carry1 = (a(start + bLen) & 0xFFFFFFFFL) - carry0 + carry1
     a(start + bLen) = carry1.toInt
     (carry1 >> 32).toInt // -1 or 0
   }
+
+  // Could be broken into divideLongByInt
+  private[bignum] def divideArrayByInt(dest: Array[Int], src: Array[Int], divisor: Int): Int = {
+    var rem = 0L
+    var bLong = divisor & 0xFFFFFFFFL
+    var i = 0
+    while (i < src.length) {
+      var temp = (rem << 32) | (src(i) & 0xFFFFFFFFL)
+      var quot = 0L
+      if (temp >= 0) {
+        quot = (temp / bLong)
+        rem = (temp % bLong)
+      } else {
+        var aPos = temp >>> 1
+        var bPos = divisor >>> 1
+        quot = aPos / bPos
+        rem = aPos % bPos
+        rem = (rem << 1) + (temp & 1)
+        if ((divisor & 1) != 0) {
+          if (quot <= rem) {
+            rem -= quot
+          } else {
+            if (quot - rem <= bLong) {
+              rem += bLong - quot
+              quot -= 1
+            } else {
+              rem += (bLong << 1) - quot
+              quot -= 2
+            }
+          }
+        }
+      }
+      dest(i) = (quot & 0xFFFFFFFFL).toInt
+      i += 1
+    }
+    rem.toInt
+  }
+
 
   /**
     * Computes <code>a/b</code> and <code>a%b</code> using the

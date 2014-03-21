@@ -476,15 +476,13 @@ final class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
     if (that.isOne) {
       return ((if (that.sign > 0) this else -this), BigInt2.zero)
     }
-    val thisSign = sign
     val thisLen = digits.length
     val thatLen = that.digits.length
-    if (1 == thatLen) {
-      divideAndRemainderByInteger(this, that.digits(0), thatSign)
-    }
     val cmp = compareArrays(digits, that.digits)
     if (cmp == 0)
-      (if (thisSign == thatSign) BigInt2.one else BigInt2.minusOne, BigInt2.zero)
+      (if (sign == thatSign) BigInt2.one else BigInt2.minusOne, BigInt2.zero)
+    else if (1 == thatLen)
+      divideAndRemainderByInteger(this, that.digits(0), thatSign)
     else if (cmp < 0) (BigInt2.zero, this)
     else divideAndRemainderKnuthPositive(this, that)
   }
@@ -1324,46 +1322,5 @@ object BigInt2 {
     if (bi.sign == -1) "-" + x.toString
     else x.toString
   }
-
-  // Could be broken into divideLongByInt
-  private[bignum] def divideArrayByInt(dest: Array[Int], src: Array[Int], divisor: Int): Int = {
-    var b = divisor & 0xFFFFFFFFL
-    @tailrec def compute(pos: Int, trem: Long): Int = {
-      if (pos >= 0) {
-        var rem = trem
-        val temp = (rem << 32) | (src(pos) & 0xFFFFFFFFL)
-        val quot =
-          if (temp >= 0) {
-            rem = (temp % b)
-            (temp / b)
-          }
-          else {
-            val aPos = temp >>> 1
-            val bPos = divisor >>> 1
-            var quot = aPos / bPos
-            rem = ((aPos % bPos) << 1) + (temp & 1)
-            if ((divisor & 1) != 0) {
-              if (quot <= rem)
-                rem = -quot
-              else if (quot - rem <= b) {
-                rem += b - quot
-                quot -= 1
-              }
-              else {
-                rem += (b << 1) - quot
-                quot -= 2
-              }
-            }
-            quot
-          }
-        dest(pos) = quot.toInt
-        compute(pos - 1, rem)
-      }
-      else trem.toInt
-    }
-    compute(src.length - 1, 0L)
-  }
-
-  private[bignum] def divide(quot: Array[Int], a: Array[Int], b: Array[Int]): Array[Int] = ???
 
 }
