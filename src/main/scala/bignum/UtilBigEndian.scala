@@ -1336,7 +1336,7 @@ object UtilBigEndian {
       else b(0) = 0
     }
     else System.arraycopy(a, 0, b, 0, len)
-    val numBitsFrac: Int = numBits % 32
+    val numBitsFrac: Int = numBits & 31
     if (numBitsFrac != 0) {
       val bhi: Int = b(len - 1) << (32 - numBitsFrac)
       b(len - 1) >>>= numBitsFrac
@@ -1447,7 +1447,7 @@ object UtilBigEndian {
       else b(0) = 0
     }
     else System.arraycopy(a, 0, b, 0, len)
-    val numBitsFrac: Int = numBits % 32
+    val numBitsFrac: Int = numBits & 31
     if (numBitsFrac != 0) {
       b(0) <<= numBitsFrac
 
@@ -1526,7 +1526,7 @@ object UtilBigEndian {
         i -= 1
       }
     }
-    if (numElements > 0) a(aIdx + 1) &= -1 >>> (32 - (numBits % 32))
+    if (numElements > 0) a(aIdx + 1) &= -1 >>> (32 - (numBits & 31))
     while (aIdx >= 0) {
       a(aIdx) = 0
       aIdx -= 1
@@ -1561,7 +1561,7 @@ object UtilBigEndian {
         i -= 1
       }
     }
-    if (numElements > 0) a(aIdx + 1) &= -1 >>> (32 - (numBits % 32))
+    if (numElements > 0) a(aIdx + 1) &= -1 >>> (32 - (numBits & 31))
     while (aIdx >= 0) {
       a(aIdx) = 0
       aIdx -= 1
@@ -1584,7 +1584,7 @@ object UtilBigEndian {
     scala.compat.Platform.arraycopy(a, 0, b, numElements, a.length - numElements);
     scala.compat.Platform.arraycopy(a, a.length - numElements, b, 0, numElements);
 
-    numBits = numBits % 32;
+    numBits = numBits & 31;
     if (numBits != 0) {
       val bhi = b(b.length - 1);
       b(b.length - 1) = b(b.length - 1) >>> numBits
@@ -1615,7 +1615,7 @@ object UtilBigEndian {
     scala.compat.Platform.arraycopy(a, numElements, b, 0, a.length - numElements);
     scala.compat.Platform.arraycopy(a, 0, b, a.length - numElements, numElements);
 
-    numBits = numBits % 32;
+    numBits = numBits & 31;
     if (numBits != 0) {
       val b0 = b(0)
       b(0) <<= numBits
@@ -1642,7 +1642,7 @@ object UtilBigEndian {
     */
   final def appendBits(a: Array[Int], aBitLength: Int, b: Array[Int], bStart: Int, bBitLength: Int): Unit = {
     var aIdx: Int = a.length - 1 - aBitLength / 32
-    val bit32: Int = aBitLength % 32
+    val bit32: Int = aBitLength & 31
 
     var i = bStart + bBitLength / 32 - 1
     while (i >= bStart) {
@@ -1657,13 +1657,13 @@ object UtilBigEndian {
       i -= 1
     }
 
-    if (bBitLength % 32 > 0) {
+    if ((bBitLength & 31) > 0) {
       aIdx = a.length - 1 - (aBitLength / 32 + bBitLength / 32)
       val bIdx = bBitLength / 32
       var bi = b(b.length - 1 - bStart + bIdx)
       bi &= -1 >>> (32 - bBitLength)
       a(aIdx) |= bi << bit32
-      if (bit32 + (bBitLength % 32) > 32)
+      if (bit32 + (bBitLength & 31) > 32)
         a(aIdx - 1) = bi >>> (32 - bit32)
     }
   }
@@ -1685,7 +1685,7 @@ object UtilBigEndian {
     while (i < b.length) {
       var bitsRemaining: Int = math.min(bitLength, a.length * 32 - i * bitLength);
       var bIntIdx: Int = bitLength / 32;
-      if (bitLength % 32 == 0)
+      if ((bitLength & 31) == 0)
         bIntIdx -= 1
       var bBitIdx = 0;
       while (bitsRemaining > 0) {
@@ -1811,8 +1811,7 @@ object UtilBigEndian {
         }
       }
       if (guessDigit != 0) {
-        var borrow = multiplyAndSubtract(normA, j -
-          normBLength, normB, guessDigit)
+        var borrow = multiplyAndSubtract(normA, j - normBLength, normB, guessDigit)
         if (borrow != 0) {
           guessDigit -= 1
           var carry = 0L
