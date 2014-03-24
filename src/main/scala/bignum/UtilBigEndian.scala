@@ -1824,18 +1824,18 @@ object UtilBigEndian {
           }
         }
       }
-      if (quot != null) quot(i) = guessDigit
+      if (quot != null) quot(quot.length - 1 - i) = guessDigit
       j -= 1
       i -= 1
     }
     val quoSign = if (_a.sign == _b.sign) 1 else -1
     if (divisorShift != 0) {
       shiftRight1(normB, normBLength, normA, 0, divisorShift);
-      (new BigInt2(quoSign, removeLeadingZeroes(quot.reverse)), new BigInt2(_a.sign, removeLeadingZeroes(normB.reverse)))
+      (new BigInt2(quoSign, removeLeadingZeroes(quot)), new BigInt2(_a.sign, removeLeadingZeroes(normB.reverse)))
     }
     else {
       System.arraycopy(normA, 0, normB, 0, bLength)
-      (new BigInt2(quoSign, removeLeadingZeroes(quot.reverse)), new BigInt2(_b.sign, removeLeadingZeroes(normA.reverse)))
+      (new BigInt2(quoSign, removeLeadingZeroes(quot)), new BigInt2(_b.sign, removeLeadingZeroes(normA.reverse)))
     }
   }
 
