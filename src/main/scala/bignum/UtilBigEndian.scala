@@ -1867,7 +1867,7 @@ object UtilBigEndian {
   final def multiplyAndSubtract(a: Array[Int], start: Int, b: Array[Int], c: Int) = {
     var carry0 = 0L
     var carry1 = 0L
-    var bLen = b.length - 1
+    val bLen = b.length - 1
     var i = 0
     while(i < bLen) {
       carry0 = ( b(i) & 0xFFFFFFFFL) * (c & 0xFFFFFFFFL) + (carry0 & 0xFFFFFFFFL)
