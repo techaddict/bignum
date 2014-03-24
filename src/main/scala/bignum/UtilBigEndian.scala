@@ -44,7 +44,7 @@ object UtilBigEndian {
   }
 
   /** Shift Left the BigInteger a by count1 bits */
-  def shiftLeft(a: BigInt2, count1: Int): BigInt2 = {
+  def shiftLeft(a: Array[Int], count1: Int): Array[Int] = {
     // We don't to shift one by one :)
     // First Shift in Multiples of 32, then in last
     val intCount = count1 >> 5
@@ -52,19 +52,20 @@ object UtilBigEndian {
     val count = count1 & 31
     // All the work is done here
     if (count == 0) {
-      val res = new Array[Int](a.digits.length + intCount)
-      scala.compat.Platform.arraycopy(a.digits, 0, res, 0, res.length - intCount)
-      new BigInt2(a.signum, res)
+      val res = new Array[Int](a.length + intCount)
+      scala.compat.Platform.arraycopy(a, 0, res, 0, res.length - intCount)
+      res
     }
     else {
-      val res = new Array[Int](a.digits.length + intCount + 1)
+      val res = new Array[Int](a.length + intCount + 1)
       var pos = 0
-      while(pos < a.digits.length) {
-        res(pos) |= a.digits(pos) >>> (32 - count)
-        res(pos + 1) = a.digits(pos) << count
+      val leftShiftCount = 32 - count
+      while(pos < a.length) {
+        res(pos) |= a(pos) >>> leftShiftCount
+        res(pos + 1) = a(pos) << count
         pos += 1
       }
-      new BigInt2(a.signum, removeLeadingZeroes(res))
+      removeLeadingZeroes(res)
     }
   }
 
