@@ -2,6 +2,11 @@
 *.log
 *.history
 
+# Eclipse
+*.classpath
+*.project
+*.settings
+
 # sbt specific
 dist/*
 target/
