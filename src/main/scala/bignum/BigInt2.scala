@@ -363,7 +363,7 @@ final class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
   /** Bitwise and-not of BigInt2s. Returns a BigInt2 whose value is (this & ~that). */
   def &~(that: BigInt2): BigInt2 = ???
 
-  private[this] def equalsArrays(a: Array[Int]): Boolean =
+  private def equalsArrays(a: Array[Int]): Boolean =
     if (a.length != digits.length)
       false
     else {
@@ -372,6 +372,7 @@ final class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
         i -= 1
       (i < 0)
     }
+  
   override def equals(that: Any): Boolean = that match {
     case a: BigInt2 => compare(a) == 0
     case b: BigInt => toString == b.toString
@@ -835,7 +836,7 @@ final class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
   /**
     * Standard Serialization would work, but we have to make sure
     * that we sanitize the array to verify our invariant of no leading
-    * “zeroes” in our magnitude.
+    * "zeroes" in our magnitude.
     *
     * Otherwise all methods depending on it will be broken.
     */
@@ -982,7 +983,7 @@ final class BigInt2 private[bignum](sign0: Int, digits0: Array[Int])
       return "0";
 
     // If it's small enough, use smallToString.
-    if (mag.length <= SchönhageBaseConversionThreshold)
+    if (mag.length <= SchoenhageBaseConversionThreshold)
       return smallToString(radix)
 
     // Otherwise use recursive toString, which requires positive arguments.
@@ -1143,7 +1144,7 @@ object BigInt2 {
   private def toString(u: BigInt2, sb: java.lang.StringBuilder, radix: Int, digits: Int): Unit = {
     /* If we're smaller than a certain threshold, use the smallToString
      * method, padding with leading zeroes when necessary. */
-    if (u.mag.length <= SchönhageBaseConversionThreshold) {
+    if (u.mag.length <= SchoenhageBaseConversionThreshold) {
       val s = u smallToString radix
 
       // Pad with internal zeros if necessary.

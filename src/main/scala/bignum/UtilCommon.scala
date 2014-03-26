@@ -169,6 +169,6 @@ object UtilCommon {
     * relatively flat for thresholds between 2-25, so this choice may be
     * varied within this range for very small effect.
     */
-  final val SchönhageBaseConversionThreshold = 8
+  final val SchoenhageBaseConversionThreshold = 8
 
 }
