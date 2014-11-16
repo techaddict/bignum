@@ -8,17 +8,18 @@ import sbt.Keys._
 object MyBuild extends Build {
 
   // Dependencies
-  lazy val scalaCheck = "org.scalacheck" %% "scalacheck" % "1.11.3"
-  lazy val scalaTest = "org.scalatest" % "scalatest_2.10" % "2.0"
-  lazy val scalaMeter = "com.github.axel22" %% "scalameter" % "0.4"
+  lazy val scalaCheck = "org.scalacheck" %% "scalacheck" % "1.11.6"
 
   // Settings
   override lazy val settings = super.settings ++ Seq(
+    scalaVersion := "2.11.4",
+    crossScalaVersions := Seq("2.10.4", "2.11.4"),
     scalacOptions ++= Seq(
       //"-no-specialization", // use this to build non-specialized jars
       //"-Yinline-warnings",
-      "-deprecation"
-      //"-unchecked",
+      "-deprecation",
+      "-feature",
+      "-unchecked"
       //"-optimize",
       //"-language:experimental.macros",
       //"-language:higherKinds",
