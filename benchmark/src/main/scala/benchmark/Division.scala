@@ -2,7 +2,6 @@ package bignum.benchmark
 
 import com.google.caliper.Param
 import com.google.caliper.{Runner => CaliperRunner}
-import org.apfloat.Apint
 import bignum.BigInt2
 
 import annotation.tailrec
@@ -21,11 +20,9 @@ class DivideBenchmark extends SimpleScalaBenchmark {
   var bigint = BigInt("0")
   var bigint2 = BigInt2("0")
   var biginteger = new java.math.BigInteger("0")
-  var apint = new Apint("0")
   var bigint0 = BigInt("0")
   var bigint20 = BigInt2("0")
   var biginteger0 = new java.math.BigInteger("0")
-  var apint0 = new Apint("0")
   override def setUp() {
     val rng = new java.util.Random()
     val a0 = new java.math.BigInteger(length, rng).toString
@@ -34,11 +31,9 @@ class DivideBenchmark extends SimpleScalaBenchmark {
     bigint = BigInt(a)
     bigint2 = BigInt2(a)
     biginteger = new java.math.BigInteger(a)
-    apint = new Apint(a)
     bigint0 = BigInt(a0)
     bigint20 = BigInt2(a0)
     biginteger0 = new java.math.BigInteger(a0)
-    apint0 = new Apint(a0)
   }
 
   def timeBigInt(reps: Int) = repeat(reps) {
@@ -62,15 +57,6 @@ class DivideBenchmark extends SimpleScalaBenchmark {
   def timeBigInteger(reps: Int) = repeat(reps) {
     var result = biginteger
     var result0 = biginteger0
-    tfor(0)(_ < 2, _ + 1) { i =>
-      result = result.divide(result0)
-    }
-    result
-  }
-
-  def timeApint(reps: Int) = repeat(reps) {
-    var result = apint
-    var result0 = apint0
     tfor(0)(_ < 2, _ + 1) { i =>
       result = result.divide(result0)
     }

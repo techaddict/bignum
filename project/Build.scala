@@ -56,8 +56,7 @@ object MyBuild extends Build {
       "com.google.guava" % "guava" % "r09",
       "com.google.code.java-allocation-instrumenter" % "java-allocation-instrumenter" % "2.1",
       "com.google.code.caliper" % "caliper" % "1.0-SNAPSHOT" from "http://plastic-idolatry.com/jars/caliper-1.0-SNAPSHOT.jar",
-      "com.google.code.gson" % "gson" % "2.2.4",
-      "org.apfloat" % "apfloat" % "1.8.1"
+      "com.google.code.gson" % "gson" % "2.2.4"
     ),
     parallelExecution := false,
     fork in run := true,
