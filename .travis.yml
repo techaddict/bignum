@@ -6,7 +6,6 @@ script:
   - sbt 'project benchmark' 'run-main bignum.benchmark.ShiftBenchmark'
   - sbt 'project benchmark' 'run-main bignum.benchmark.DivideBenchmark'
 scala:
-  - 2.10.4
   - 2.11.4
 jdk:
   - oraclejdk7
