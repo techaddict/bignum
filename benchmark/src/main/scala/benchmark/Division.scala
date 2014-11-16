@@ -15,7 +15,7 @@ object DivideBenchmark {
 
 class DivideBenchmark extends SimpleScalaBenchmark {
 
-  @Param(Array("32", "64", "200", "500", "1000"))
+  @Param(Array("200", "500", "1000"))
   val length: Int = 0
 
   var bigint = BigInt("0")

@@ -12,7 +12,7 @@ object ShiftBenchmark {
 
 class ShiftBenchmark extends SimpleScalaBenchmark {
 
-  @Param(Array("32", "64", "200", "500", "1000", "5000", "10000", "50000"))
+  @Param(Array("200", "500", "1000", "5000", "10000", "50000"))
   val param: Int = 0
 
   var bigint = BigInt("0")

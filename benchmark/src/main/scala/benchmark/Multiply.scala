@@ -15,7 +15,7 @@ object MultiplyBenchmark {
 
 class MultiplyBenchmark extends SimpleScalaBenchmark {
 
-  @Param(Array("32", "64", "200", "500", "1000", "5000", "10000", "20000"))
+  @Param(Array("200", "500", "1000", "5000", "10000", "20000"))
   val length: Int = 0
 
   var bigint = BigInt("0")

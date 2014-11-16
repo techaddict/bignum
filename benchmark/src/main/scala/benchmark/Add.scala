@@ -15,13 +15,12 @@ object AddBenchmark {
 
 class AddBenchmark extends SimpleScalaBenchmark {
 
-  @Param(Array("32", "64", "200", "500", "1000", "5000", "10000", "50000"))
+  @Param(Array("200", "500", "1000", "5000", "10000", "50000"))
   val length: Int = 0
 
   var bigint = BigInt("0")
   var bigint2 = BigInt2("0")
   var biginteger = new java.math.BigInteger("0")
-  var apint = new Apint("0")
 
   override def setUp() {
     val rng = new java.util.Random()
@@ -30,7 +29,6 @@ class AddBenchmark extends SimpleScalaBenchmark {
     bigint = BigInt(a)
     bigint2 = BigInt2(a)
     biginteger = new java.math.BigInteger(a)
-    apint = new Apint(a)
   }
 
   def timeBigInt(reps: Int) = repeat(reps) {
@@ -51,14 +49,6 @@ class AddBenchmark extends SimpleScalaBenchmark {
 
   def timeBigInteger(reps: Int) = repeat(reps) {
     var result = biginteger
-    tfor(0)(_ < 5, _ + 1) { i =>
-      result = result.add(result)
-    }
-    result
-  }
-
-  def timeApint(reps: Int) = repeat(reps) {
-    var result = apint
     tfor(0)(_ < 5, _ + 1) { i =>
       result = result.add(result)
     }
